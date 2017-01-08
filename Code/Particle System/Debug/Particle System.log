@@ -1,0 +1,5 @@
+﻿  ParticleSystemApplication.cpp
+ParticleSystemApplication.cpp(244): warning C4552: '-' : operator has no effect; expected operator with side-effect
+ParticleSystemApplication.cpp(259): warning C4552: '-' : operator has no effect; expected operator with side-effect
+ParticleSystemApplication.cpp(274): warning C4552: '-' : operator has no effect; expected operator with side-effect
+  Particle System.vcxproj -> C:\Users\iamse\Desktop\ParticleSystems\Particle System\.\Debug\Particle System.exe
