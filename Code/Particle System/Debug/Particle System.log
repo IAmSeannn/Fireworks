@@ -1,5 +1,5 @@
 ﻿  ParticleSystemApplication.cpp
-ParticleSystemApplication.cpp(244): warning C4552: '-' : operator has no effect; expected operator with side-effect
-ParticleSystemApplication.cpp(259): warning C4552: '-' : operator has no effect; expected operator with side-effect
-ParticleSystemApplication.cpp(274): warning C4552: '-' : operator has no effect; expected operator with side-effect
-  Particle System.vcxproj -> C:\Users\iamse\Desktop\ParticleSystems\Particle System\.\Debug\Particle System.exe
+c:\users\iamse\documents\github\fireworks\code\particle system\particlesystem.h(510): warning C4552: '-' : operator has no effect; expected operator with side-effect
+ParticleSystemApplication.cpp(218): warning C4552: '-' : operator has no effect; expected operator with side-effect
+ParticleSystemApplication.cpp(308): warning C4018: '<' : signed/unsigned mismatch
+  Particle System.vcxproj -> C:\Users\iamse\Documents\GitHub\Fireworks\Code\Particle System\.\Debug\Particle System.exe

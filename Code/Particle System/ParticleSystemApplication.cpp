@@ -17,8 +17,10 @@ LPDIRECT3DDEVICE9       device	= NULL;	// The rendering device
 
 LPD3DXMESH g_BoxMesh = NULL;						// Mesh used for the floor.
 
-FOUNTAIN_CLASS /*fountain1,*/ fountain2;
-FIREWORK_CLASS firework1, firework2, firework3;
+//FOUNTAIN_CLASS /*fountain1,*/ fountain2;
+//FIREWORK_EXPLOSION_CLASS firework1, firework2, firework3;
+
+std::vector<std::shared_ptr<PARTICLE_SYSTEM_BASE>> g_ParticlesAll;
 
 LPDIRECT3DTEXTURE9	spark_bitmap = NULL, particle_bitmap = NULL, spark_bitmap2 = NULL, spark_bitmap3 = NULL;			// The texture for the point sprites.
 
@@ -166,10 +168,16 @@ void render()
 
 		// Render the fountains last, as Z buffer is turned off during rendering these.
 		//fountain1.render();
-		fountain2.render();
-		firework1.render();
+		//fountain2.render();
+		/*firework1.render();
 		firework2.render();
-		firework3.render();
+		firework3.render();*/
+		//rocket1.render();
+
+		for (auto &p : g_ParticlesAll)
+		{
+			p->render();
+		}
 
         device -> EndScene();
     }
@@ -183,105 +191,43 @@ void render()
 
 void SetupParticleSystems()
 {
-	// First particle system.
-	//fountain1.max_particles_	= 1000;
-
-	//fountain1.origin_			= D3DXVECTOR3(-50.0f, 0, 0);
-
-	//fountain1.gravity_			= -9.81f / 2;  // Gravity - pre divided by 2.
-
-	//fountain1.terminate_on_floor_ = false;
-
-	//fountain1.start_interval_	= 1;
-	//fountain1.start_timer_		= 0;
-
-	//fountain1.launch_velocity_	= 60.0f;
-	//fountain1.launch_angle_		= D3DXToRadian(60.0f);
-
-	//fountain1.time_increment_	= 0.08f;
-	//fountain1.max_lifetime_		= 200;
-
-	//fountain1.start_particles_	= 40; //Number of particles to start at once.
-
-	//fountain1.particle_size_	= 16.0f;
-
+	////add a firework1
+	//firework1.max_particles_ = 500;
+	//firework1.origin_ = D3DXVECTOR3(0.0f, 300.0f, 0);
+	//firework1.gravity_ -9.81f / 2;  // Gravity - pre divided by 2.
+	//firework1.start_interval_ = 500;
+	//firework1.start_timer_ = 0;
+	//firework1.launch_velocity_ = 10.0f;
+	//firework1.time_increment_ = 0.05f;
+	//firework1.max_lifetime_ = 300;
+	//firework1.start_particles_ = 100;
+	//firework1.particle_size_ = 8.0f;
 	//D3DXCreateTextureFromFile(device, "spark.png", &spark_bitmap);
-	//fountain1.particle_texture_ = spark_bitmap;
+	//firework1.particle_texture_ = spark_bitmap;
+	//firework1.initialise(device);
 
-	//fountain1.initialise(device);
-
-
-	// Second particle system.
-	fountain2.max_particles_	= 500;
-
-	fountain2.origin_			= D3DXVECTOR3(50.0f, -100.0f, 0);
-
-	fountain2.gravity_			= -9.81f / 2;  // Gravity - pre divided by 2.
-
-	fountain2.terminate_on_floor_ = false;
-
-	fountain2.start_interval_	= 10;
-	fountain2.start_timer_		= 0;
-
-	fountain2.launch_velocity_	= 55.0f;
-	fountain2.launch_angle_		= D3DXToRadian(80.0f);
-
-	fountain2.time_increment_	= 0.05f;
-	fountain2.max_lifetime_		= 160;
-
-	fountain2.start_particles_	= 5; //Number of particles to start at once.
-
-	fountain2.particle_size_	= 8.0f;
-
-	D3DXCreateTextureFromFile(device, "yellow.dds", &particle_bitmap);
-	fountain2.particle_texture_ = particle_bitmap;
-
-	fountain2.initialise(device);
-
-	//add a firework1
-	firework1.max_particles_ = 500;
-	firework1.origin_ = D3DXVECTOR3(0.0f, 300.0f, 0);
-	firework1.gravity_ -9.81f / 2;  // Gravity - pre divided by 2.
-	firework1.start_interval_ = 500;
-	firework1.start_timer_ = 0;
-	firework1.launch_velocity_ = 10.0f;
-	firework1.time_increment_ = 0.05f;
-	firework1.max_lifetime_ = 160;
-	firework1.start_particles_ = 100;
-	firework1.particle_size_ = 8.0f;
-	D3DXCreateTextureFromFile(device, "spark.png", &spark_bitmap);
-	firework1.particle_texture_ = spark_bitmap;
-	firework1.initialise(device);
-
-	//add a firework2
-	firework2.max_particles_ = 500;
-	firework2.origin_ = D3DXVECTOR3(-100.0f, 300.0f, 0);
-	firework2.gravity_ - 9.81f / 2;  // Gravity - pre divided by 2.
-	firework2.start_interval_ = 500;
-	firework2.start_timer_ = 50;
-	firework2.launch_velocity_ = 10.0f;
-	firework2.time_increment_ = 0.05f;
-	firework2.max_lifetime_ = 160;
-	firework2.start_particles_ = 100;
-	firework2.particle_size_ = 8.0f;
-	D3DXCreateTextureFromFile(device, "spark2.png", &spark_bitmap2);
-	firework2.particle_texture_ = spark_bitmap2;
-	firework2.initialise(device);
-
-	//add a firework3
-	firework3.max_particles_ = 500;
-	firework3.origin_ = D3DXVECTOR3(100.0f, 300.0f, 0);
-	firework3.gravity_ - 9.81f / 2;  // Gravity - pre divided by 2.
-	firework3.start_interval_ = 500;
-	firework3.start_timer_ = 50;
-	firework3.launch_velocity_ = 10.0f;
-	firework3.time_increment_ = 0.05f;
-	firework3.max_lifetime_ = 160;
-	firework3.start_particles_ = 100;
-	firework3.particle_size_ = 8.0f;
 	D3DXCreateTextureFromFile(device, "spark3.png", &spark_bitmap3);
-	firework3.particle_texture_ = spark_bitmap3;
-	firework3.initialise(device);
+
+	std::shared_ptr<FIREWORK_ROCKET_CLASS> f(new FIREWORK_ROCKET_CLASS);
+
+
+	//add a rocket1
+	f->max_particles_ = 500;
+	f->rocketTime = 200;
+	f->origin_ = D3DXVECTOR3(100.0f, 0.0f, 0);
+	f->gravity_ - 9.81f / 2;  // Gravity - pre divided by 2.
+	f->start_interval_ = 2;
+	f->start_timer_ = 0;
+	f->launch_velocity_ = 1.0f;
+	f->time_increment_ = 0.05f;
+	f->max_lifetime_ = 100;
+	f->start_particles_ = 2;
+	f->particle_size_ = 1.0f;
+	f->particle_texture_ = spark_bitmap3;
+	f->globalParticles = &g_ParticlesAll;
+	f->initialise(device);
+
+	g_ParticlesAll.push_back(f);
 }
 
 //-----------------------------------------------------------------------------
@@ -348,10 +294,22 @@ int WINAPI WinMain(HINSTANCE hInst, HINSTANCE, LPSTR, int)
 				{
 					SetupViewMatrices();
 					//fountain1.update();
-					fountain2.update();
-					firework1.update();
+					//fountain2.update();
+					/*firework1.update();
 					firework2.update();
-					firework3.update();
+					firework3.update();*/
+					//rocket1.update();
+
+					/*for (auto &p : g_ParticlesAll)
+					{
+						p->update();
+					}*/
+
+					for (int i = 0; i < g_ParticlesAll.size(); i++)
+					{
+						g_ParticlesAll[i]->update();
+					}
+
 					render();
 				}
             }

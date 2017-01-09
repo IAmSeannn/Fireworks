@@ -9,6 +9,7 @@
 #include <vector>
 #include <algorithm>
 #include <functional>
+#include <memory>
 
 #pragma once
 
@@ -302,11 +303,10 @@ class FOUNTAIN_CLASS : public PARTICLE_SYSTEM_BASE
 
 //-----------------------------------------------------------------------------------------------------------------------------------------------------
 
-
-class FIREWORK_CLASS : public PARTICLE_SYSTEM_BASE
+class FIREWORK_EXPLOSION_CLASS : public PARTICLE_SYSTEM_BASE
 {
 public:
-	FIREWORK_CLASS() : PARTICLE_SYSTEM_BASE(), gravity_(0), terminate_on_floor_(false), floorY_(0) {}
+	FIREWORK_EXPLOSION_CLASS() : PARTICLE_SYSTEM_BASE(), gravity_(0), terminate_on_floor_(false), floorY_(0) {}
 
 	// Update the positions of the particles, and start new particles if necessary.
 	void update()
@@ -400,9 +400,163 @@ private:
 		p->velocity_.z = launch_velocity_ * (float)cos(launch_angle_) * (float)sin(direction_angle);
 
 		//have random lifetime
-		int n = random_number(100, max_lifetime_);
+		int n = random_number(0, max_lifetime_);
 
 		p->lifetime_ = n;
+
+		++alive_particles_;
+	}
+};
+
+//-----------------------------------------------------------------------------------------------------------------------------------------------------
+
+class FIREWORK_ROCKET_CLASS : public PARTICLE_SYSTEM_BASE
+{
+public:
+	FIREWORK_ROCKET_CLASS() : PARTICLE_SYSTEM_BASE(), gravity_(0), terminate_on_floor_(false), floorY_(0), activated(false) {}
+
+	// Update the positions of the particles, and start new particles if necessary.
+	void update()
+	{
+		// Start particles, if necessary...
+		//and if rocket is still alive
+		if (rocketTime > 0)
+		{
+			start_particles();
+		}
+
+		// Update the particles that are still alive...
+		for (std::vector<PARTICLE>::iterator p(particles_.begin()); p != particles_.end(); ++p)
+		{
+			if (p->lifetime_ > 0)	// Update only if this particle is alive.
+			{
+				// Calculate the new position of the particle...
+
+				// Vertical distance.
+				/*float s = (p->velocity_.y * p->time_) + (gravity_ * p->time_ * p->time_);
+
+				p->position_.y = s + origin_.y;
+				p->position_.x = (p->velocity_.x * p->time_) + origin_.x;
+				p->position_.z = (p->velocity_.z * p->time_) + origin_.z;*/
+
+				p->position_ += p->velocity_;
+
+				p->time_ += time_increment_;
+				--(p->lifetime_);
+
+				if (p->lifetime_ == 0)	// Has this particle come to the end of it's life?
+				{
+					--alive_particles_;		// If so, terminate it.
+				}
+				else
+				{
+					if (terminate_on_floor_)	// or has the particle hit the floor? if so, terminate it. Flag to determine if to do this.
+					{
+						if (p->position_.y < floorY_)
+						{
+							p->lifetime_ = 0;
+							--alive_particles_;
+						}
+					}
+				}
+			}
+		}
+
+		// Create a pointer to the first vertex in the buffer
+		// Also lock it, so nothing else can touch it while the values are being inserted.
+		POINTVERTEX *points;
+		points_->Lock(0, 0, (void**)&points, 0);
+
+		// Fill the vertex buffers with data...
+		int P(0);
+
+		// Now update the vertex buffer - after the update has been
+		// performed, just in case this particle has died in the process.
+
+		for (std::vector<PARTICLE>::iterator p(particles_.begin()); p != particles_.end(); ++p)
+		{
+			if (p->lifetime_ > 0)
+			{
+				points[P].position_.y = p->position_.y;
+				points[P].position_.x = p->position_.x;
+				points[P].position_.z = p->position_.z;
+				++P;
+			}
+		}
+
+		points_->Unlock();
+
+		//move the rocket up along the y axis a little
+		origin_.y += 2.0f;
+
+		//check if time to explode
+		if (!activated)
+		{
+			if (rocketTime > 0)
+			{
+				--rocketTime;
+			}
+			else
+			{
+				activated = true;
+				//explode explosion
+				std::shared_ptr<FIREWORK_EXPLOSION_CLASS> f(new FIREWORK_EXPLOSION_CLASS);
+				LPDIRECT3DTEXTURE9	spark_bitmap = NULL;
+				D3DXCreateTextureFromFile(render_target_, "spark3.png", &spark_bitmap);
+
+				////add a firework1
+				f->max_particles_ = 500;
+				f->origin_ = origin_;
+				f->gravity_ - 9.81f / 2;  // Gravity - pre divided by 2.
+				f->start_interval_ = 500;
+				f->start_timer_ = 0;
+				f->launch_velocity_ = 10.0f;
+				f->time_increment_ = 0.05f;
+				f->max_lifetime_ = 300;
+				f->start_particles_ = 100;
+				f->particle_size_ = 8.0f;
+				f->particle_texture_ = spark_bitmap;
+				f->initialise(render_target_);
+
+				globalParticles->push_back(f);
+			}
+		}
+			
+	}
+
+	bool  terminate_on_floor_;		// Flag to indicate that particles will die when they hit the floor (floorY_).
+	float gravity_, floorY_, launch_velocity_;
+	float rocketTime;
+	std::vector<std::shared_ptr<PARTICLE_SYSTEM_BASE>> *globalParticles;
+
+private:
+
+	bool activated;
+
+	virtual void start_single_particle(std::vector<PARTICLE>::iterator &p)	// Initialise/start particle 'p'.
+	{
+		if (p == particles_.end()) return;	// Safety net - if there are no dead particles, don't start any new ones...
+
+											// Reset the particle's time (for calculating it's position with s = ut+0.5t*t)
+		p->time_ = 0;
+
+		//set initial position
+		p->position_ = origin_;
+
+		// Now calculate the particle's horizontal and depth components.
+		// The particle can be ejected at a random angle, around a sphere.
+		float direction_angle = (float)(D3DXToRadian(random_number(95, 105)));
+		float launch_angle_ = (float)(D3DXToRadian(random_number(10, 20)));
+
+		// Calculate the vertical component of velocity.
+		p->velocity_.y = launch_velocity_ * (float)sin(launch_angle_);
+
+		// Calculate the horizontal components of velocity.
+		// This is X and Z dimensions.
+		p->velocity_.x = launch_velocity_ * (float)cos(launch_angle_) * (float)cos(direction_angle);
+		p->velocity_.z = launch_velocity_ * (float)cos(launch_angle_) * (float)sin(direction_angle);
+
+		p->lifetime_ = max_lifetime_;
 
 		++alive_particles_;
 	}
