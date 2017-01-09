@@ -59,7 +59,7 @@ struct PARTICLE
 class PARTICLE_SYSTEM_BASE
 {
 	public:
-		PARTICLE_SYSTEM_BASE() : max_particles_(0), start_particles_(0), alive_particles_(0), max_lifetime_(0), origin_(D3DXVECTOR3(0, 0, 0)), points_(NULL), particle_size_(1.0f)
+		PARTICLE_SYSTEM_BASE() : max_particles_(0), start_particles_(0), alive_particles_(0), max_lifetime_(0), origin_(D3DXVECTOR3(0, 0, 0)), points_(NULL), particle_size_(1.0f), safeToDelete(false)
 		{}
 
 		~PARTICLE_SYSTEM_BASE()
@@ -149,6 +149,7 @@ class PARTICLE_SYSTEM_BASE
 		float time_increment_;					// Used to increase the value of 'time'for each particle - used to calculate vertical position.
 
 		float particle_size_;					// Size of the point.
+		bool safeToDelete;
 
 	private:
 
@@ -372,6 +373,11 @@ public:
 		}
 
 		points_->Unlock();
+
+		if (alive_particles_ == 0)
+		{
+			safeToDelete = true;
+		}
 	}
 
 	bool  terminate_on_floor_;		// Flag to indicate that particles will die when they hit the floor (floorY_).
@@ -519,6 +525,13 @@ public:
 				f->initialise(render_target_);
 
 				globalParticles->push_back(f);
+			}
+		}
+		else
+		{
+			if (alive_particles_ == 0)
+			{
+				safeToDelete = true;
 			}
 		}
 			

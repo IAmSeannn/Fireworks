@@ -293,21 +293,24 @@ int WINAPI WinMain(HINSTANCE hInst, HINSTANCE, LPSTR, int)
                 else
 				{
 					SetupViewMatrices();
-					//fountain1.update();
-					//fountain2.update();
-					/*firework1.update();
-					firework2.update();
-					firework3.update();*/
-					//rocket1.update();
 
-					/*for (auto &p : g_ParticlesAll)
-					{
-						p->update();
-					}*/
+					std::vector<int> deleteThis;
 
 					for (int i = 0; i < g_ParticlesAll.size(); i++)
 					{
 						g_ParticlesAll[i]->update();
+						if (g_ParticlesAll[i]->safeToDelete)
+						{
+							deleteThis.push_back(i);
+						}
+					}
+
+					if (deleteThis.size() > 0)
+					{
+						for (auto i : deleteThis)
+						{
+							g_ParticlesAll.erase(g_ParticlesAll.begin()+i);
+						}
 					}
 
 					render();
