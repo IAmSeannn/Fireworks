@@ -224,8 +224,7 @@ void SetupParticleSystems()
 	f->start_particles_ = 2;
 	f->particle_size_ = 1.0f;
 	f->particle_texture_ = spark_bitmap3;
-	f->globalParticles = &g_ParticlesAll;
-	f->initialise(device);
+	f->initialise(device, &g_ParticlesAll);
 
 	g_ParticlesAll.push_back(f);
 }

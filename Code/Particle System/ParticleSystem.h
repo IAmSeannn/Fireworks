@@ -69,10 +69,13 @@ class PARTICLE_SYSTEM_BASE
 			SAFE_RELEASE(points_);
 		}
 
-		HRESULT initialise(LPDIRECT3DDEVICE9 device)
+		HRESULT initialise(LPDIRECT3DDEVICE9 device, std::vector<std::shared_ptr<PARTICLE_SYSTEM_BASE>> *gP)
 		{
 			// Store the render target for later use...
 			render_target_ = device;
+
+			//store global list of particles to allow removal
+			AddThisToGlobalVector(gP);
 			
 			PARTICLE p;
 			reset_particle(p);
@@ -144,11 +147,16 @@ class PARTICLE_SYSTEM_BASE
 		LPDIRECT3DTEXTURE9 particle_texture_;	// The texture for the points.				
 		D3DXVECTOR3 origin_;					// Vectors for origin of the particle system.
 
-		int start_timer_;						// Count-down timer, start another particle when zero.		
-		int start_interval_;		     		// Interval between starting a new particle (used to initialise 'start_timer_').
 		float time_increment_;					// Used to increase the value of 'time'for each particle - used to calculate vertical position.
 
 		float particle_size_;					// Size of the point.
+
+
+		//for consideration
+		//these two should probably be moved to just rocket class, but left here for future proofing for now.
+		int start_timer_;						// Count-down timer, start another particle when zero.		
+		int start_interval_;		     		// Interval between starting a new particle (used to initialise 'start_timer_').
+
 		bool safeToDelete;
 
 	private:
@@ -197,6 +205,13 @@ class PARTICLE_SYSTEM_BASE
 		
 		// Specific implemention to define to policy for starting/creating a single particle.
 		virtual void start_single_particle(std::vector<PARTICLE>::iterator &) = 0;
+
+		//for adding to global vector of particle systems, to handle deleting etc
+		std::vector<std::shared_ptr<PARTICLE_SYSTEM_BASE>> *globalParticles;
+		void AddThisToGlobalVector(std::vector<std::shared_ptr<PARTICLE_SYSTEM_BASE>> *gP)
+		{
+			globalParticles = gP;
+		}
 };
 
 //-----------------------------------------------------------------------------------------------------------------------------------------------------
@@ -389,7 +404,7 @@ private:
 	{
 		if (p == particles_.end()) return;	// Safety net - if there are no dead particles, don't start any new ones...
 
-											// Reset the particle's time (for calculating it's position with s = ut+0.5t*t)
+		// Reset the particle's time (for calculating it's position with s = ut+0.5t*t)
 		p->time_ = 0;
 
 		// Now calculate the particle's horizontal and depth components.
@@ -522,7 +537,7 @@ public:
 				f->start_particles_ = 100;
 				f->particle_size_ = 8.0f;
 				f->particle_texture_ = spark_bitmap;
-				f->initialise(render_target_);
+				f->initialise(render_target_, globalParticles);
 
 				globalParticles->push_back(f);
 			}
@@ -540,7 +555,7 @@ public:
 	bool  terminate_on_floor_;		// Flag to indicate that particles will die when they hit the floor (floorY_).
 	float gravity_, floorY_, launch_velocity_;
 	float rocketTime;
-	std::vector<std::shared_ptr<PARTICLE_SYSTEM_BASE>> *globalParticles;
+	//std::vector<std::shared_ptr<PARTICLE_SYSTEM_BASE>> *globalParticles;
 
 private:
 
