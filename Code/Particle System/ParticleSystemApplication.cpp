@@ -13,14 +13,12 @@
 // Global variables
 
 LPDIRECT3D9             d3d		= NULL;	// Used to create the device
-LPDIRECT3DDEVICE9       device	= NULL;	// The rendering device
+
 
 LPD3DXMESH g_BoxMesh = NULL;						// Mesh used for the floor.
 
 //FOUNTAIN_CLASS /*fountain1,*/ fountain2;
 //FIREWORK_EXPLOSION_CLASS firework1, firework2, firework3;
-
-std::vector<std::shared_ptr<PARTICLE_SYSTEM_BASE>> g_Particles;
 std::vector<std::shared_ptr<FireworkSpawner>> g_Spawners;
 
 //float view_angle = 10;								// Angle for moving the camera.
@@ -212,9 +210,9 @@ void render()
 void SetupParticleSystems()
 {
 	//create spawner a
-	std::shared_ptr<FireworkSpawner> a(new FireworkSpawner(150, D3DXVECTOR3(150.0f, 0.0f, 0), &g_Particles, device));
-	std::shared_ptr<FireworkSpawner> b(new FireworkSpawner(200, D3DXVECTOR3(0.0f, 0.0f, 0), &g_Particles, device));
-	std::shared_ptr<FireworkSpawner> c(new FireworkSpawner(150, D3DXVECTOR3(-150.0f, 0.0f, 0), &g_Particles, device));
+	std::shared_ptr<FireworkSpawner> a(new FireworkSpawner(150, D3DXVECTOR3(150.0f, 0.0f, 0)));
+	std::shared_ptr<FireworkSpawner> b(new FireworkSpawner(200, D3DXVECTOR3(0.0f, 0.0f, 0)));
+	std::shared_ptr<FireworkSpawner> c(new FireworkSpawner(150, D3DXVECTOR3(-150.0f, 0.0f, 0)));
 
 	g_Spawners.push_back(a);
 	g_Spawners.push_back(b);

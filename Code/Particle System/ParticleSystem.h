@@ -8,8 +8,6 @@
 #include <vector>
 #include <memory>
 
-
-
 #define SAFE_DELETE(p)       {if(p) {delete (p);     (p)=NULL;}}
 #define SAFE_DELETE_ARRAY(p) {if(p) {delete[] (p);   (p)=NULL;}}
 #define SAFE_RELEASE(p)      {if(p) {(p)->Release(); (p)=NULL;}}
@@ -17,8 +15,12 @@
 //initialisers (I think)
 class PARTICLE_SYSTEM_BASE;
 
-void CreateRocket(LPDIRECT3DDEVICE9 device, std::vector<std::shared_ptr<PARTICLE_SYSTEM_BASE>> *gP, D3DXVECTOR3 startLocation);
-void CreateExplosion(LPDIRECT3DDEVICE9 device, std::vector<std::shared_ptr<PARTICLE_SYSTEM_BASE>> *gP, D3DXVECTOR3 startLocation);
+//global vars
+LPDIRECT3DDEVICE9       device = NULL;	// The rendering device
+std::vector<std::shared_ptr<PARTICLE_SYSTEM_BASE>> g_Particles;
+
+void CreateRocket(D3DXVECTOR3 startLocation);
+void CreateExplosion(D3DXVECTOR3 startLocation);
 
 //-----------------------------------------------------------------------------
 // PARTICLE CLASSES
@@ -76,14 +78,8 @@ class PARTICLE_SYSTEM_BASE
 			SAFE_RELEASE(points_);
 		}
 
-		HRESULT initialise(LPDIRECT3DDEVICE9 device, std::vector<std::shared_ptr<PARTICLE_SYSTEM_BASE>> *gP)
-		{
-			// Store the render target for later use...
-			render_target_ = device;
-
-			//store global list of particles to allow removal
-			AddThisToGlobalVector(gP);
-			
+		HRESULT initialise()
+		{			
 			PARTICLE p;
 			reset_particle(p);
 			particles_.resize(max_particles_, p);	// Create a vector of empty particles - make 'max_particles_' copies of particle 'p'.
@@ -107,42 +103,42 @@ class PARTICLE_SYSTEM_BASE
 		void render()
 		{
 			// Enable point sprites, and set the size of the point.
-			render_target_	-> SetRenderState(D3DRS_POINTSPRITEENABLE, true);
-			render_target_  -> SetRenderState(D3DRS_POINTSCALEENABLE,  true);
+			device -> SetRenderState(D3DRS_POINTSPRITEENABLE, true);
+			device-> SetRenderState(D3DRS_POINTSCALEENABLE,  true);
 
 			// Disable z buffer while rendering the particles. Makes rendering quicker and
 			// stops any visual (alpha) 'artefacts' on screen while rendering.
-			render_target_ -> SetRenderState(D3DRS_ZENABLE, false);
+			device-> SetRenderState(D3DRS_ZENABLE, false);
 		    
 			// Scale the points according to distance...
-			render_target_ -> SetRenderState(D3DRS_POINTSIZE,     FtoDW(particle_size_));
-			render_target_ -> SetRenderState(D3DRS_POINTSIZE_MIN, FtoDW(0.00f));
-			render_target_ -> SetRenderState(D3DRS_POINTSCALE_A,  FtoDW(0.00f));
-			render_target_ -> SetRenderState(D3DRS_POINTSCALE_B,  FtoDW(0.00f));
-			render_target_ -> SetRenderState(D3DRS_POINTSCALE_C,  FtoDW(1.00f));
+			device-> SetRenderState(D3DRS_POINTSIZE,     FtoDW(particle_size_));
+			device-> SetRenderState(D3DRS_POINTSIZE_MIN, FtoDW(0.00f));
+			device-> SetRenderState(D3DRS_POINTSCALE_A,  FtoDW(0.00f));
+			device-> SetRenderState(D3DRS_POINTSCALE_B,  FtoDW(0.00f));
+			device-> SetRenderState(D3DRS_POINTSCALE_C,  FtoDW(1.00f));
 
 			// Now select the texture for the points...
 			// Use texture colour and alpha components.
-			render_target_ -> SetTexture(0, particle_texture_);
-			render_target_ -> SetRenderState(D3DRS_ALPHABLENDENABLE, true);
-			render_target_ -> SetRenderState(D3DRS_SRCBLEND,  D3DBLEND_SRCALPHA);
-			render_target_ -> SetRenderState(D3DRS_DESTBLEND, D3DBLEND_INVSRCALPHA);
-			render_target_ -> SetTextureStageState(0, D3DTSS_COLORARG1, D3DTA_TEXTURE);
-			render_target_ -> SetTextureStageState(0, D3DTSS_COLOROP,	D3DTOP_SELECTARG1);
-			render_target_ -> SetTextureStageState(0, D3DTSS_ALPHAARG1, D3DTA_TEXTURE);
-			render_target_ -> SetTextureStageState(0, D3DTSS_ALPHAOP,   D3DTOP_SELECTARG1);
+			device-> SetTexture(0, particle_texture_);
+			device-> SetRenderState(D3DRS_ALPHABLENDENABLE, true);
+			device-> SetRenderState(D3DRS_SRCBLEND,  D3DBLEND_SRCALPHA);
+			device-> SetRenderState(D3DRS_DESTBLEND, D3DBLEND_INVSRCALPHA);
+			device-> SetTextureStageState(0, D3DTSS_COLORARG1, D3DTA_TEXTURE);
+			device-> SetTextureStageState(0, D3DTSS_COLOROP,	D3DTOP_SELECTARG1);
+			device-> SetTextureStageState(0, D3DTSS_ALPHAARG1, D3DTA_TEXTURE);
+			device-> SetTextureStageState(0, D3DTSS_ALPHAOP,   D3DTOP_SELECTARG1);
 
 			// Render the contents of the vertex buffer.
-			render_target_ -> SetStreamSource(0, points_, 0, sizeof(POINTVERTEX));
-			render_target_ -> SetFVF(D3DFVF_POINTVERTEX);
-			render_target_ -> DrawPrimitive(D3DPT_POINTLIST, 0, alive_particles_);
+			device-> SetStreamSource(0, points_, 0, sizeof(POINTVERTEX));
+			device-> SetFVF(D3DFVF_POINTVERTEX);
+			device-> DrawPrimitive(D3DPT_POINTLIST, 0, alive_particles_);
 
 			// Reset the render states.
-			render_target_ -> SetRenderState(D3DRS_POINTSPRITEENABLE, false);
-			render_target_ -> SetRenderState(D3DRS_POINTSCALEENABLE,  false);
-			render_target_ -> SetRenderState(D3DRS_ALPHABLENDENABLE,  false);
-			render_target_ -> SetTextureStageState(0, D3DTSS_COLORARG1, D3DTA_DIFFUSE);
-			render_target_ -> SetRenderState(D3DRS_ZENABLE, D3DZB_TRUE);
+			device-> SetRenderState(D3DRS_POINTSPRITEENABLE, false);
+			device-> SetRenderState(D3DRS_POINTSCALEENABLE,  false);
+			device-> SetRenderState(D3DRS_ALPHABLENDENABLE,  false);
+			device-> SetTextureStageState(0, D3DTSS_COLORARG1, D3DTA_DIFFUSE);
+			device-> SetRenderState(D3DRS_ZENABLE, D3DZB_TRUE);
 		}
 
 		int max_particles_;						// The maximum number of particles in this particle system.
@@ -208,17 +204,9 @@ class PARTICLE_SYSTEM_BASE
 		std::vector<PARTICLE>	particles_;
 
 		LPDIRECT3DVERTEXBUFFER9 points_;  // Vertex buffer for the points.
-		LPDIRECT3DDEVICE9		render_target_;
 		
 		// Specific implemention to define to policy for starting/creating a single particle.
 		virtual void start_single_particle(std::vector<PARTICLE>::iterator &) = 0;
-
-		//for adding to global vector of particle systems, to handle deleting etc
-		std::vector<std::shared_ptr<PARTICLE_SYSTEM_BASE>> *globalParticles;
-		void AddThisToGlobalVector(std::vector<std::shared_ptr<PARTICLE_SYSTEM_BASE>> *gP)
-		{
-			globalParticles = gP;
-		}
 };
 
 //-----------------------------------------------------------------------------------------------------------------------------------------------------
@@ -528,7 +516,7 @@ public:
 			{
 				activated = true;
 				//explode explosion
-				CreateExplosion(render_target_, globalParticles, origin_);
+				CreateExplosion(origin_);
 			}
 		}
 		else
@@ -544,8 +532,6 @@ public:
 	bool  terminate_on_floor_;		// Flag to indicate that particles will die when they hit the floor (floorY_).
 	float gravity_, floorY_, launch_velocity_;
 	float rocketTime;
-	//std::vector<std::shared_ptr<PARTICLE_SYSTEM_BASE>> *globalParticles;
-
 private:
 
 	bool activated;
@@ -587,7 +573,7 @@ private:
 
 LPDIRECT3DTEXTURE9	spark_bitmap = NULL, particle_bitmap = NULL, spark_bitmap2 = NULL, spark_bitmap3 = NULL;
 
-void CreateRocket(LPDIRECT3DDEVICE9 device, std::vector<std::shared_ptr<PARTICLE_SYSTEM_BASE>> *gP, D3DXVECTOR3 startLocation)
+void CreateRocket(D3DXVECTOR3 startLocation)
 {
 	if (spark_bitmap3 == NULL)
 	{
@@ -609,12 +595,12 @@ void CreateRocket(LPDIRECT3DDEVICE9 device, std::vector<std::shared_ptr<PARTICLE
 	f->start_particles_ = 2;
 	f->particle_size_ = 1.0f;
 	f->particle_texture_ = spark_bitmap3;
-	f->initialise(device, gP);
+	f->initialise();
 
-	gP->push_back(f);
+	g_Particles.push_back(f);
 }
 
-void CreateExplosion(LPDIRECT3DDEVICE9 device, std::vector<std::shared_ptr<PARTICLE_SYSTEM_BASE>> *gP, D3DXVECTOR3 startLocation)
+void CreateExplosion(D3DXVECTOR3 startLocation)
 {
 	std::shared_ptr<FIREWORK_EXPLOSION_CLASS> f(new FIREWORK_EXPLOSION_CLASS);
 	LPDIRECT3DTEXTURE9	spark_bitmap = NULL;
@@ -632,9 +618,9 @@ void CreateExplosion(LPDIRECT3DDEVICE9 device, std::vector<std::shared_ptr<PARTI
 	f->start_particles_ = 100;
 	f->particle_size_ = 8.0f;
 	f->particle_texture_ = spark_bitmap;
-	f->initialise(device, gP);
+	f->initialise();
 
-	gP->insert(gP->begin(), f);
+	g_Particles.push_back(f);
 }
 
 //-----------------------------------------------------------------------------
@@ -644,8 +630,8 @@ void CreateExplosion(LPDIRECT3DDEVICE9 device, std::vector<std::shared_ptr<PARTI
 class FireworkSpawner
 {
 public:
-	FireworkSpawner(int count, D3DXVECTOR3 Loc, std::vector<std::shared_ptr<PARTICLE_SYSTEM_BASE>> *ptr, LPDIRECT3DDEVICE9 dev)
-	: MAX_COUNTER(count), counter(0), Location(Loc), gP(ptr), device(dev) {};
+	FireworkSpawner(int count, D3DXVECTOR3 Loc)
+	: MAX_COUNTER(count), counter(0), Location(Loc){};
 	~FireworkSpawner() {};
 
 	D3DXVECTOR3 Location;
@@ -657,7 +643,7 @@ public:
 		if (counter == 0)
 		{
 			//activate
-			CreateRocket(device, gP, Location);
+			CreateRocket(Location);
 			//reset
 			counter = MAX_COUNTER;
 		}
@@ -666,8 +652,4 @@ public:
 			--counter;
 		}
 	}
-
-private:
-	LPDIRECT3DDEVICE9 device;
-	std::vector<std::shared_ptr<PARTICLE_SYSTEM_BASE>> *gP;
 };
