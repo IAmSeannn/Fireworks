@@ -1,14 +1,10 @@
-//-----------------------------------------------------------------------------
-// PARTICLE SYSTEM CLASS EXAMPLE
-//-----------------------------------------------------------------------------
-
+//includes
 // Include these files...
-
 #include <stdlib.h>		// Included for the random number generator routines.
-#include <d3dx9.h>		// Direct 3D library (for all Direct 3D funtions).
-#include <vector>
 #include <algorithm>
 #include <functional>
+#include <d3dx9.h>
+#include <vector>
 #include <memory>
 
 #pragma once
@@ -16,6 +12,16 @@
 #define SAFE_DELETE(p)       {if(p) {delete (p);     (p)=NULL;}}
 #define SAFE_DELETE_ARRAY(p) {if(p) {delete[] (p);   (p)=NULL;}}
 #define SAFE_RELEASE(p)      {if(p) {(p)->Release(); (p)=NULL;}}
+
+//initialisers (I think)
+class PARTICLE_SYSTEM_BASE;
+
+void CreateRocket(LPDIRECT3DDEVICE9 device, std::vector<std::shared_ptr<PARTICLE_SYSTEM_BASE>> *gP, D3DXVECTOR3 startLocation);
+void CreateExplosion(LPDIRECT3DDEVICE9 device, std::vector<std::shared_ptr<PARTICLE_SYSTEM_BASE>> *gP, D3DXVECTOR3 startLocation);
+
+//-----------------------------------------------------------------------------
+// PARTICLE CLASSES
+//-----------------------------------------------------------------------------
 
 unsigned int random_number()
 {
@@ -521,25 +527,7 @@ public:
 			{
 				activated = true;
 				//explode explosion
-				std::shared_ptr<FIREWORK_EXPLOSION_CLASS> f(new FIREWORK_EXPLOSION_CLASS);
-				LPDIRECT3DTEXTURE9	spark_bitmap = NULL;
-				D3DXCreateTextureFromFile(render_target_, "spark3.png", &spark_bitmap);
-
-				////add a firework1
-				f->max_particles_ = 500;
-				f->origin_ = origin_;
-				f->gravity_ - 9.81f / 2;  // Gravity - pre divided by 2.
-				f->start_interval_ = 500;
-				f->start_timer_ = 0;
-				f->launch_velocity_ = 10.0f;
-				f->time_increment_ = 0.05f;
-				f->max_lifetime_ = 300;
-				f->start_particles_ = 100;
-				f->particle_size_ = 8.0f;
-				f->particle_texture_ = spark_bitmap;
-				f->initialise(render_target_, globalParticles);
-
-				globalParticles->push_back(f);
+				CreateExplosion(render_target_, globalParticles, origin_);
 			}
 		}
 		else
@@ -589,3 +577,61 @@ private:
 		++alive_particles_;
 	}
 };
+
+//-----------------------------------------------------------------------------------------------------------------------------------------------------
+
+//-----------------------------------------------------------------------------
+// FIREWORK CREATORS
+//-----------------------------------------------------------------------------
+
+LPDIRECT3DTEXTURE9	spark_bitmap = NULL, particle_bitmap = NULL, spark_bitmap2 = NULL, spark_bitmap3 = NULL;
+
+void CreateRocket(LPDIRECT3DDEVICE9 device, std::vector<std::shared_ptr<PARTICLE_SYSTEM_BASE>> *gP, D3DXVECTOR3 startLocation)
+{
+	if (spark_bitmap3 == NULL)
+	{
+		D3DXCreateTextureFromFile(device, "spark3.png", &spark_bitmap3);
+	}
+
+	std::shared_ptr<FIREWORK_ROCKET_CLASS> f(new FIREWORK_ROCKET_CLASS);
+
+	//add a rocket1
+	f->max_particles_ = 500;
+	f->rocketTime = 200;
+	f->origin_ = startLocation;
+	f->gravity_ - 9.81f / 2;  // Gravity - pre divided by 2.
+	f->start_interval_ = 2;
+	f->start_timer_ = 0;
+	f->launch_velocity_ = 1.0f;
+	f->time_increment_ = 0.05f;
+	f->max_lifetime_ = 100;
+	f->start_particles_ = 2;
+	f->particle_size_ = 1.0f;
+	f->particle_texture_ = spark_bitmap3;
+	f->initialise(device, gP);
+
+	gP->push_back(f);
+}
+
+void CreateExplosion(LPDIRECT3DDEVICE9 device, std::vector<std::shared_ptr<PARTICLE_SYSTEM_BASE>> *gP, D3DXVECTOR3 startLocation)
+{
+	std::shared_ptr<FIREWORK_EXPLOSION_CLASS> f(new FIREWORK_EXPLOSION_CLASS);
+	LPDIRECT3DTEXTURE9	spark_bitmap = NULL;
+	D3DXCreateTextureFromFile(device, "spark3.png", &spark_bitmap);
+
+	////add a firework1
+	f->max_particles_ = 500;
+	f->origin_ = startLocation;
+	f->gravity_ - 9.81f / 2;  // Gravity - pre divided by 2.
+	f->start_interval_ = 500;
+	f->start_timer_ = 0;
+	f->launch_velocity_ = 10.0f;
+	f->time_increment_ = 0.05f;
+	f->max_lifetime_ = 300;
+	f->start_particles_ = 100;
+	f->particle_size_ = 8.0f;
+	f->particle_texture_ = spark_bitmap;
+	f->initialise(device, gP);
+
+	gP->insert(gP->begin(), f);
+}

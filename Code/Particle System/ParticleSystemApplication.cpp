@@ -22,8 +22,6 @@ LPD3DXMESH g_BoxMesh = NULL;						// Mesh used for the floor.
 
 std::vector<std::shared_ptr<PARTICLE_SYSTEM_BASE>> g_ParticlesAll;
 
-LPDIRECT3DTEXTURE9	spark_bitmap = NULL, particle_bitmap = NULL, spark_bitmap2 = NULL, spark_bitmap3 = NULL;			// The texture for the point sprites.
-
 //float view_angle = 10;								// Angle for moving the camera.
 
 //---------------------------------------------------------------------------------------------------------------------------------
@@ -166,17 +164,17 @@ void render()
 
 		g_BoxMesh -> DrawSubset(0);
 
-		// Render the fountains last, as Z buffer is turned off during rendering these.
-		//fountain1.render();
-		//fountain2.render();
-		/*firework1.render();
-		firework2.render();
-		firework3.render();*/
-		//rocket1.render();
-
-		for (auto &p : g_ParticlesAll)
+		//for (auto &p : g_ParticlesAll)
+		for(auto &it = g_ParticlesAll.begin(); it != g_ParticlesAll.end(); ++it)
 		{
-			p->render();
+			(*it)->render();
+
+			////check if particle should be removed
+			//if ((*it)->safeToDelete)
+			//{
+			//	g_ParticlesAll.erase(it);
+			//	--it;
+			//}
 		}
 
         device -> EndScene();
@@ -191,42 +189,8 @@ void render()
 
 void SetupParticleSystems()
 {
-	////add a firework1
-	//firework1.max_particles_ = 500;
-	//firework1.origin_ = D3DXVECTOR3(0.0f, 300.0f, 0);
-	//firework1.gravity_ -9.81f / 2;  // Gravity - pre divided by 2.
-	//firework1.start_interval_ = 500;
-	//firework1.start_timer_ = 0;
-	//firework1.launch_velocity_ = 10.0f;
-	//firework1.time_increment_ = 0.05f;
-	//firework1.max_lifetime_ = 300;
-	//firework1.start_particles_ = 100;
-	//firework1.particle_size_ = 8.0f;
-	//D3DXCreateTextureFromFile(device, "spark.png", &spark_bitmap);
-	//firework1.particle_texture_ = spark_bitmap;
-	//firework1.initialise(device);
-
-	D3DXCreateTextureFromFile(device, "spark3.png", &spark_bitmap3);
-
-	std::shared_ptr<FIREWORK_ROCKET_CLASS> f(new FIREWORK_ROCKET_CLASS);
-
-
-	//add a rocket1
-	f->max_particles_ = 500;
-	f->rocketTime = 200;
-	f->origin_ = D3DXVECTOR3(100.0f, 0.0f, 0);
-	f->gravity_ - 9.81f / 2;  // Gravity - pre divided by 2.
-	f->start_interval_ = 2;
-	f->start_timer_ = 0;
-	f->launch_velocity_ = 1.0f;
-	f->time_increment_ = 0.05f;
-	f->max_lifetime_ = 100;
-	f->start_particles_ = 2;
-	f->particle_size_ = 1.0f;
-	f->particle_texture_ = spark_bitmap3;
-	f->initialise(device, &g_ParticlesAll);
-
-	g_ParticlesAll.push_back(f);
+	//create a rocket
+	CreateRocket(device, &g_ParticlesAll, D3DXVECTOR3(100.0f, 0.0f, 0));
 }
 
 //-----------------------------------------------------------------------------
@@ -293,22 +257,16 @@ int WINAPI WinMain(HINSTANCE hInst, HINSTANCE, LPSTR, int)
 				{
 					SetupViewMatrices();
 
-					std::vector<int> deleteThis;
-
-					for (int i = 0; i < g_ParticlesAll.size(); i++)
+					//for (auto &it = g_ParticlesAll.rbegin(); it != g_ParticlesAll.rend(); ++it)
+					for(int i = 0; i < g_ParticlesAll.size(); ++i)
 					{
 						g_ParticlesAll[i]->update();
+						
+						//check if particle should be removed
 						if (g_ParticlesAll[i]->safeToDelete)
 						{
-							deleteThis.push_back(i);
-						}
-					}
-
-					if (deleteThis.size() > 0)
-					{
-						for (auto i : deleteThis)
-						{
 							g_ParticlesAll.erase(g_ParticlesAll.begin()+i);
+							--i;
 						}
 					}
 
