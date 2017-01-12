@@ -20,7 +20,8 @@ LPD3DXMESH g_BoxMesh = NULL;						// Mesh used for the floor.
 //FOUNTAIN_CLASS /*fountain1,*/ fountain2;
 //FIREWORK_EXPLOSION_CLASS firework1, firework2, firework3;
 
-std::vector<std::shared_ptr<PARTICLE_SYSTEM_BASE>> g_ParticlesAll;
+std::vector<std::shared_ptr<PARTICLE_SYSTEM_BASE>> g_Particles;
+std::vector<std::shared_ptr<FireworkSpawner>> g_Spawners;
 
 //float view_angle = 10;								// Angle for moving the camera.
 
@@ -130,6 +131,35 @@ void SetupLights()
 }
 
 //-----------------------------------------------------------------------------
+// Run All Update Functions
+
+void Update()
+{
+	//UPDATE ALL SPAWNERS
+
+	for (auto s : g_Spawners)
+	{
+		s->Update();
+	}
+
+	//UPDATE ALL PARTICLES
+
+	//for (auto &it = g_ParticlesAll.rbegin(); it != g_ParticlesAll.rend(); ++it)
+	for (int i = 0; i < g_Particles.size(); ++i)
+	{
+		g_Particles[i]->update();
+
+		//check if particle should be removed
+		if (g_Particles[i]->safeToDelete)
+		{
+			g_Particles.erase(g_Particles.begin() + i);
+			--i;
+		}
+	}
+}
+
+
+//-----------------------------------------------------------------------------
 // Render the scene.
 
 void render()
@@ -164,17 +194,9 @@ void render()
 
 		g_BoxMesh -> DrawSubset(0);
 
-		//for (auto &p : g_ParticlesAll)
-		for(auto &it = g_ParticlesAll.begin(); it != g_ParticlesAll.end(); ++it)
+		for (auto &p : g_Particles)
 		{
-			(*it)->render();
-
-			////check if particle should be removed
-			//if ((*it)->safeToDelete)
-			//{
-			//	g_ParticlesAll.erase(it);
-			//	--it;
-			//}
+			p->render();
 		}
 
         device -> EndScene();
@@ -189,8 +211,15 @@ void render()
 
 void SetupParticleSystems()
 {
-	//create a rocket
-	CreateRocket(device, &g_ParticlesAll, D3DXVECTOR3(100.0f, 0.0f, 0));
+	//create spawner a
+	std::shared_ptr<FireworkSpawner> a(new FireworkSpawner(150, D3DXVECTOR3(150.0f, 0.0f, 0), &g_Particles, device));
+	std::shared_ptr<FireworkSpawner> b(new FireworkSpawner(200, D3DXVECTOR3(0.0f, 0.0f, 0), &g_Particles, device));
+	std::shared_ptr<FireworkSpawner> c(new FireworkSpawner(150, D3DXVECTOR3(-150.0f, 0.0f, 0), &g_Particles, device));
+
+	g_Spawners.push_back(a);
+	g_Spawners.push_back(b);
+	g_Spawners.push_back(c);
+
 }
 
 //-----------------------------------------------------------------------------
@@ -257,18 +286,7 @@ int WINAPI WinMain(HINSTANCE hInst, HINSTANCE, LPSTR, int)
 				{
 					SetupViewMatrices();
 
-					//for (auto &it = g_ParticlesAll.rbegin(); it != g_ParticlesAll.rend(); ++it)
-					for(int i = 0; i < g_ParticlesAll.size(); ++i)
-					{
-						g_ParticlesAll[i]->update();
-						
-						//check if particle should be removed
-						if (g_ParticlesAll[i]->safeToDelete)
-						{
-							g_ParticlesAll.erase(g_ParticlesAll.begin()+i);
-							--i;
-						}
-					}
+					Update();
 
 					render();
 				}

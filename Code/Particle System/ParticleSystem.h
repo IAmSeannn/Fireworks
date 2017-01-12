@@ -1,3 +1,4 @@
+#pragma once
 //includes
 // Include these files...
 #include <stdlib.h>		// Included for the random number generator routines.
@@ -7,7 +8,7 @@
 #include <vector>
 #include <memory>
 
-#pragma once
+
 
 #define SAFE_DELETE(p)       {if(p) {delete (p);     (p)=NULL;}}
 #define SAFE_DELETE_ARRAY(p) {if(p) {delete[] (p);   (p)=NULL;}}
@@ -635,3 +636,38 @@ void CreateExplosion(LPDIRECT3DDEVICE9 device, std::vector<std::shared_ptr<PARTI
 
 	gP->insert(gP->begin(), f);
 }
+
+//-----------------------------------------------------------------------------
+// FIREWORK SPAWNER
+//-----------------------------------------------------------------------------
+
+class FireworkSpawner
+{
+public:
+	FireworkSpawner(int count, D3DXVECTOR3 Loc, std::vector<std::shared_ptr<PARTICLE_SYSTEM_BASE>> *ptr, LPDIRECT3DDEVICE9 dev)
+	: MAX_COUNTER(count), counter(0), Location(Loc), gP(ptr), device(dev) {};
+	~FireworkSpawner() {};
+
+	D3DXVECTOR3 Location;
+	int counter;
+	const int MAX_COUNTER;
+
+	void Update()
+	{
+		if (counter == 0)
+		{
+			//activate
+			CreateRocket(device, gP, Location);
+			//reset
+			counter = MAX_COUNTER;
+		}
+		else
+		{
+			--counter;
+		}
+	}
+
+private:
+	LPDIRECT3DDEVICE9 device;
+	std::vector<std::shared_ptr<PARTICLE_SYSTEM_BASE>> *gP;
+};
