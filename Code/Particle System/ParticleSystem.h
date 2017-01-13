@@ -70,7 +70,7 @@ struct PARTICLE
 class PARTICLE_SYSTEM_BASE
 {
 	public:
-		PARTICLE_SYSTEM_BASE() : max_particles_(0), start_particles_(0), alive_particles_(0), max_lifetime_(0), origin_(D3DXVECTOR3(0, 0, 0)), points_(NULL), particle_size_(1.0f), safeToDelete(false)
+		PARTICLE_SYSTEM_BASE() : max_particles_(0), alive_particles_(0), max_lifetime_(0), origin_(D3DXVECTOR3(0, 0, 0)), points_(NULL), particle_size_(1.0f), safeToDelete(false)
 		{}
 
 		~PARTICLE_SYSTEM_BASE()
@@ -80,7 +80,7 @@ class PARTICLE_SYSTEM_BASE
 			SAFE_RELEASE(points_);
 		}
 
-		HRESULT initialise()
+		virtual HRESULT initialise()
 		{			
 			PARTICLE p;
 			reset_particle(p);
@@ -144,7 +144,6 @@ class PARTICLE_SYSTEM_BASE
 		}
 
 		int max_particles_;						// The maximum number of particles in this particle system.
-		int start_particles_;					// Number of particles to start in each batch.
 
 		int alive_particles_;					// The number of particles that are currently alive.
 		int max_lifetime_;					    // The start age of each particle (count down from this, kill particle when zero).
@@ -153,15 +152,7 @@ class PARTICLE_SYSTEM_BASE
 		D3DXVECTOR3 origin_;					// Vectors for origin of the particle system.
 
 		float time_increment_;					// Used to increase the value of 'time'for each particle - used to calculate vertical position.
-
 		float particle_size_;					// Size of the point.
-
-
-		//for consideration
-		//these two should probably be moved to just rocket class, but left here for future proofing for now.
-		int start_timer_;						// Count-down timer, start another particle when zero.		
-		int start_interval_;		     		// Interval between starting a new particle (used to initialise 'start_timer_').
-
 		bool safeToDelete;
 
 	private:
@@ -175,33 +166,14 @@ class PARTICLE_SYSTEM_BASE
 				}
 		};
 
+	protected:
+
 		std::vector<PARTICLE>::iterator find_next_dead_particle()
 		{
 			return std::find_if(particles_.begin(), particles_.end(), is_particle_dead());
 		}
-
-	protected:
 	
-		void start_particles()
-		{
-			// Only start a new particle when the time is right and there are enough dead (inactive) particles.
-			if (start_timer_ == 0 && alive_particles_ < max_particles_)
-			{
-				// Number of particles to start in this batch...
-				for (int i(0); i < start_particles_; ++i)
-				{
-					if (alive_particles_ < max_particles_) start_single_particle(find_next_dead_particle());
-				}
-
-				// Reset the start timer for the next batch of particles.
-				start_timer_ = start_interval_;
-			}
-			else
-			{
-				// Otherwise decrease the start timer.
-				--start_timer_;
-			}
-		}
+		virtual void start_particles() = 0;
 
 		std::vector<PARTICLE>	particles_;
 
@@ -319,14 +291,22 @@ class FOUNTAIN_CLASS : public PARTICLE_SYSTEM_BASE
 class FIREWORK_EXPLOSION_CLASS : public PARTICLE_SYSTEM_BASE
 {
 public:
-	FIREWORK_EXPLOSION_CLASS() : PARTICLE_SYSTEM_BASE(), gravity_(0), terminate_on_floor_(false), floorY_(0) {}
+	FIREWORK_EXPLOSION_CLASS() : PARTICLE_SYSTEM_BASE(), gravity_(0), terminate_on_floor_(false), floorY_(0) 
+	{
+		//start particles on birth
+		start_particles();
+	}
+
+	HRESULT initialise()
+	{
+		HRESULT temp = PARTICLE_SYSTEM_BASE::initialise();
+		start_particles();
+		return temp;	
+	}
 
 	// Update the positions of the particles, and start new particles if necessary.
 	void update()
 	{
-		// Start particles, if necessary...
-		start_particles();
-
 		// Update the particles that are still alive...
 		for (std::vector<PARTICLE>::iterator p(particles_.begin()); p != particles_.end(); ++p)
 		{
@@ -389,6 +369,15 @@ public:
 		if (alive_particles_ == 0)
 		{
 			safeToDelete = true;
+		}
+	}
+
+	void start_particles()
+	{
+		// start all the particles
+		for (int i(0); i < max_particles_; ++i)
+		{
+			if (alive_particles_ < max_particles_) start_single_particle(find_next_dead_particle());
 		}
 	}
 
@@ -531,10 +520,36 @@ public:
 			
 	}
 
+	void start_particles()
+	{
+		// Only start a new particle when the time is right and there are enough dead (inactive) particles.
+		if (start_timer_ == 0 && alive_particles_ < max_particles_)
+		{
+			// Number of particles to start in this batch...
+			for (int i(0); i < start_particles_; ++i)
+			{
+				if (alive_particles_ < max_particles_) start_single_particle(find_next_dead_particle());
+			}
+
+			// Reset the start timer for the next batch of particles.
+			start_timer_ = start_interval_;
+		}
+		else
+		{
+			// Otherwise decrease the start timer.
+			--start_timer_;
+		}
+	}
+
 	bool  terminate_on_floor_;		// Flag to indicate that particles will die when they hit the floor (floorY_).
 	float gravity_, floorY_, launch_velocity_;
 	float rocketTime;
 	D3DXVECTOR3 RocketVel;
+
+	int start_particles_;					// Number of particles to start in each batch.
+	int start_timer_;						// Count-down timer, start another particle when zero.		
+	int start_interval_;		     		// Interval between starting a new particle (used to initialise 'start_timer_').
+
 private:
 
 	bool activated;
@@ -629,15 +644,12 @@ void CreateExplosion(D3DXVECTOR3 startLocation)
 	std::shared_ptr<FIREWORK_EXPLOSION_CLASS> f(new FIREWORK_EXPLOSION_CLASS);
 
 	////add a firework1
-	f->max_particles_ = 500;
+	f->max_particles_ = 200;
 	f->origin_ = startLocation;
 	f->gravity_ = -0.75f;
-	f->start_interval_ = 500;
-	f->start_timer_ = 0;
 	f->launch_velocity_ = 10.0f;
 	f->time_increment_ = 0.05f;
 	f->max_lifetime_ = 300;
-	f->start_particles_ = 100;
 	f->particle_size_ = 3.0f;
 
 	f->particle_texture_ = getRandomTexture();
