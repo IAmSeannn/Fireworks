@@ -22,6 +22,8 @@ std::vector<std::shared_ptr<PARTICLE_SYSTEM_BASE>> g_Particles;
 void CreateRocket(D3DXVECTOR3 startLocation);
 void CreateExplosion(D3DXVECTOR3 startLocation);
 
+LPDIRECT3DTEXTURE9	blueTex = NULL, redTex = NULL, yellowTex = NULL, greenTex = NULL;
+
 //-----------------------------------------------------------------------------
 // PARTICLE CLASSES
 //-----------------------------------------------------------------------------
@@ -503,7 +505,7 @@ public:
 		points_->Unlock();
 
 		//move the rocket up along the y axis a little
-		origin_.y += 2.0f;
+		origin_ += RocketVel;
 
 		//check if time to explode
 		if (!activated)
@@ -532,6 +534,7 @@ public:
 	bool  terminate_on_floor_;		// Flag to indicate that particles will die when they hit the floor (floorY_).
 	float gravity_, floorY_, launch_velocity_;
 	float rocketTime;
+	D3DXVECTOR3 RocketVel;
 private:
 
 	bool activated;
@@ -571,55 +574,75 @@ private:
 // FIREWORK CREATORS
 //-----------------------------------------------------------------------------
 
-LPDIRECT3DTEXTURE9	spark_bitmap = NULL, particle_bitmap = NULL, spark_bitmap2 = NULL, spark_bitmap3 = NULL;
+LPDIRECT3DTEXTURE9 &getRandomTexture()
+{
+	int i = random_number(0, 4);
+
+	switch (i)
+	{
+	case 0:
+		return greenTex;
+		break;
+	case 1:
+		return redTex;
+		break;
+	case 2:
+		return blueTex;
+		break;
+	default:
+		return yellowTex;
+		break;
+	}
+}
 
 void CreateRocket(D3DXVECTOR3 startLocation)
 {
-	if (spark_bitmap3 == NULL)
-	{
-		D3DXCreateTextureFromFile(device, "spark3.png", &spark_bitmap3);
-	}
-
 	std::shared_ptr<FIREWORK_ROCKET_CLASS> f(new FIREWORK_ROCKET_CLASS);
 
 	//add a rocket1
 	f->max_particles_ = 500;
-	f->rocketTime = 200;
+	f->rocketTime = 160 + random_number(0,20);
 	f->origin_ = startLocation;
-	f->gravity_ - 9.81f / 2;  // Gravity - pre divided by 2.
-	f->start_interval_ = 2;
+	f->start_interval_ = 1;
 	f->start_timer_ = 0;
 	f->launch_velocity_ = 1.0f;
 	f->time_increment_ = 0.05f;
-	f->max_lifetime_ = 100;
+	f->max_lifetime_ = 20;
 	f->start_particles_ = 2;
-	f->particle_size_ = 1.0f;
-	f->particle_texture_ = spark_bitmap3;
-	f->initialise();
+	f->particle_size_ = 0.5f;
 
+	//slightly random vel
+	float x = (float)random_number(0, 30);
+	float z = (float)random_number(0, 30);
+	x = ((x - 15) / 100);
+	z = ((z - 15) / 100);
+	f->RocketVel = D3DXVECTOR3(x, 2.0f, z);
+
+	f->particle_texture_ = getRandomTexture();
+
+	f->initialise();
 	g_Particles.push_back(f);
 }
 
 void CreateExplosion(D3DXVECTOR3 startLocation)
 {
 	std::shared_ptr<FIREWORK_EXPLOSION_CLASS> f(new FIREWORK_EXPLOSION_CLASS);
-	LPDIRECT3DTEXTURE9	spark_bitmap = NULL;
-	D3DXCreateTextureFromFile(device, "spark3.png", &spark_bitmap);
 
 	////add a firework1
 	f->max_particles_ = 500;
 	f->origin_ = startLocation;
-	f->gravity_ - 9.81f / 2;  // Gravity - pre divided by 2.
+	f->gravity_ = -0.75f;
 	f->start_interval_ = 500;
 	f->start_timer_ = 0;
 	f->launch_velocity_ = 10.0f;
 	f->time_increment_ = 0.05f;
 	f->max_lifetime_ = 300;
 	f->start_particles_ = 100;
-	f->particle_size_ = 8.0f;
-	f->particle_texture_ = spark_bitmap;
-	f->initialise();
+	f->particle_size_ = 3.0f;
 
+	f->particle_texture_ = getRandomTexture();
+
+	f->initialise();
 	g_Particles.push_back(f);
 }
 

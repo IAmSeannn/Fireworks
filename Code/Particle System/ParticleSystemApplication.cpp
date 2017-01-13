@@ -13,15 +13,9 @@
 // Global variables
 
 LPDIRECT3D9             d3d		= NULL;	// Used to create the device
-
-
 LPD3DXMESH g_BoxMesh = NULL;						// Mesh used for the floor.
 
-//FOUNTAIN_CLASS /*fountain1,*/ fountain2;
-//FIREWORK_EXPLOSION_CLASS firework1, firework2, firework3;
 std::vector<std::shared_ptr<FireworkSpawner>> g_Spawners;
-
-//float view_angle = 10;								// Angle for moving the camera.
 
 //---------------------------------------------------------------------------------------------------------------------------------
 // Initialise Direct 3D.
@@ -209,6 +203,11 @@ void render()
 
 void SetupParticleSystems()
 {
+	D3DXCreateTextureFromFile(device, "yellow.png", &yellowTex);
+	D3DXCreateTextureFromFile(device, "red.png", &redTex);
+	D3DXCreateTextureFromFile(device, "blue.png", &blueTex);
+	D3DXCreateTextureFromFile(device, "green.png", &greenTex);
+
 	//create spawner a
 	std::shared_ptr<FireworkSpawner> a(new FireworkSpawner(150, D3DXVECTOR3(150.0f, 0.0f, 0)));
 	std::shared_ptr<FireworkSpawner> b(new FireworkSpawner(200, D3DXVECTOR3(0.0f, 0.0f, 0)));
