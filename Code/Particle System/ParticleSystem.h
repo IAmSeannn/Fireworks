@@ -23,7 +23,7 @@ float windSpeed = 0.0f;
 void CreateRocket(D3DXVECTOR3 startLocation);
 void CreateExplosion(D3DXVECTOR3 startLocation);
 
-LPDIRECT3DTEXTURE9	blueTex = NULL, redTex = NULL, yellowTex = NULL, greenTex = NULL;
+LPDIRECT3DTEXTURE9	blueTex = NULL, redTex = NULL, yellowTex = NULL, greenTex = NULL, skyboxTex = NULL;
 
 //-----------------------------------------------------------------------------
 // PARTICLE CLASSES
@@ -457,6 +457,7 @@ public:
 				p->position_.z = (p->velocity_.z * p->time_) + origin_.z;*/
 
 				p->position_ += p->velocity_;
+				p->position_.x += windSpeed;
 
 				p->time_ += time_increment_;
 				--(p->lifetime_);
@@ -661,7 +662,7 @@ void CreateExplosion(D3DXVECTOR3 startLocation)
 	f->launch_velocity_ = 5.0f;
 	f->time_increment_ = 0.95;
 	f->max_lifetime_ = 100;
-	f->particle_size_ = 1.0f;
+	f->particle_size_ = 2.5f;
 
 	f->particle_texture_ = getRandomTexture();
 

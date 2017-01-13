@@ -28,6 +28,17 @@ ID3DXFont *font;
 RECT fRectangle;
 std::string message;
 
+LPDIRECT3DVERTEXBUFFER9 g_pVertexBuffer = NULL; // Buffer to hold vertices for the rectangle
+
+struct CUSTOMVERTEX
+{
+	D3DXVECTOR3 position;	// Position
+	FLOAT u, v;				// Texture co-ordinates.
+};
+
+// The structure of a vertex in our vertex buffer...
+#define D3DFVF_CUSTOMVERTEX (D3DFVF_XYZ | D3DFVF_TEX1)
+
 //---------------------------------------------------------------------------------------------------------------------------------
 // Initialise Direct 3D.
 // Requires a handle to the window in which the graphics will be drawn.
@@ -69,6 +80,7 @@ void CleanUp()
 	SAFE_RELEASE(device);
     SAFE_RELEASE(d3d);
 	SAFE_RELEASE(font);
+	SAFE_RELEASE(skyboxTex);
 }
 
 //-----------------------------------------------------------------------------
@@ -76,7 +88,69 @@ void CleanUp()
 
 HRESULT SetupGeometry()
 {
-	return D3DXCreateBox(device, 250, 1, 150, &g_BoxMesh, NULL);
+	// Calculate the number of vertices required, and the size of the buffer to hold them.
+	int Vertices = 2 * 3;	// Six vertices for the square.
+	int BufferSize = Vertices * sizeof(CUSTOMVERTEX);
+
+	// Create the vertex buffer.
+	if (FAILED(device->CreateVertexBuffer(BufferSize, 0, D3DFVF_CUSTOMVERTEX, D3DPOOL_DEFAULT, &g_pVertexBuffer, NULL)))
+	{
+		return E_FAIL; // if the vertex buffer could not be created.
+	}
+
+	// Fill the buffer with appropriate vertices to describe the cube...
+
+	// Create a pointer to the first vertex in the buffer.
+	CUSTOMVERTEX *pVertices;
+	if (FAILED(g_pVertexBuffer->Lock(0, 0, (void**)&pVertices, 0)))
+	{
+		return E_FAIL;  // if the pointer to the vertex buffer could not be established.
+	}
+
+	// Fill the vertex buffers with data...
+
+	// Side 1 - Front face
+	pVertices[0].position.x = -200;	// Vertex co-ordinate.
+	pVertices[0].position.y = -200;
+	pVertices[0].position.z = -200;
+	pVertices[0].u = 0;
+	pVertices[0].v = 1;
+
+	pVertices[1].position.x = -200;
+	pVertices[1].position.y = 200;
+	pVertices[1].position.z = -200;
+	pVertices[1].u = 0;
+	pVertices[1].v = 0;
+
+	pVertices[2].position.x = 200;
+	pVertices[2].position.y = -200;
+	pVertices[2].position.z = -200;
+	pVertices[2].u = 1;
+	pVertices[2].v = 1;
+
+	pVertices[3].position.x = 200;
+	pVertices[3].position.y = -200;
+	pVertices[3].position.z = -200;
+	pVertices[3].u = 1;
+	pVertices[3].v = 1;
+
+	pVertices[4].position.x = -200;
+	pVertices[4].position.y = 200;
+	pVertices[4].position.z = -200;
+	pVertices[4].u = 0;
+	pVertices[4].v = 0;
+
+	pVertices[5].position.x = 200;
+	pVertices[5].position.y = 200;
+	pVertices[5].position.z = -200;
+	pVertices[5].u = 1;
+	pVertices[5].v = 0;
+
+
+	// Unlock the vertex buffer...
+	g_pVertexBuffer->Unlock();
+
+	return S_OK;
 }
 
 //-----------------------------------------------------------------------------
@@ -91,8 +165,8 @@ void SetupViewMatrices()
 
 	//view_angle += 0.2f;
 
-    D3DXVECTOR3 vCamera(0.0f, 600.0f, 600.0f);
-    D3DXVECTOR3 vLookat(0.0f, 150.0f, 0.0f);
+    D3DXVECTOR3 vCamera(0.0f, 0.0f, -600.0f);
+    D3DXVECTOR3 vLookat(0.0f, 0.0f, 0.0f);
     D3DXVECTOR3 vUpVector(0.0f, 1.0f, 0.0f);
     D3DXMATRIX matView;
     D3DXMatrixLookAtLH(&matView, &vCamera, &vLookat, &vUpVector);
@@ -194,14 +268,6 @@ void render()
     // Begin the scene
     if (SUCCEEDED(device -> BeginScene()))
     {
-		D3DMATERIAL9 Mtl;
-		ZeroMemory(&Mtl, sizeof(D3DMATERIAL9));
-
-		Mtl.Diffuse.r = 1.0f;
-		Mtl.Diffuse.g = 1.0f;
-		Mtl.Diffuse.b = 1.0f;
-		device -> SetMaterial(&Mtl);
-
 		D3DXQUATERNION Rotation, ScalingRotation;
 		D3DXMATRIX TransformMatrix;
 
@@ -216,7 +282,14 @@ void render()
 		D3DXMatrixTransformation(&TransformMatrix, &ScalingCentre, &ScalingRotation, &Scaling, &RotationCentre, &Rotation, &Translate);
 		device -> SetTransform(D3DTS_WORLD, &TransformMatrix);
 
-		g_BoxMesh -> DrawSubset(0);
+		device->SetTexture(0, skyboxTex);
+		device->SetTextureStageState(0, D3DTSS_COLORARG1, D3DTA_TEXTURE);
+		device->SetTextureStageState(0, D3DTSS_COLOROP, D3DTOP_SELECTARG1);
+
+		// Render the contents of the vertex buffer.
+		device->SetStreamSource(0, g_pVertexBuffer, 0, sizeof(CUSTOMVERTEX));
+		device->SetFVF(D3DFVF_CUSTOMVERTEX);
+		device->DrawPrimitive(D3DPT_TRIANGLELIST, 0, 2);
 
 		for (auto &p : g_Particles)
 		{
@@ -248,9 +321,9 @@ void SetupParticleSystems()
 	D3DXCreateTextureFromFile(device, "green.png", &greenTex);
 
 	//create spawner a
-	std::shared_ptr<FireworkSpawner> a(new FireworkSpawner(150, D3DXVECTOR3(150.0f, 0.0f, 0)));
-	std::shared_ptr<FireworkSpawner> b(new FireworkSpawner(200, D3DXVECTOR3(0.0f, 0.0f, 0)));
-	std::shared_ptr<FireworkSpawner> c(new FireworkSpawner(150, D3DXVECTOR3(-150.0f, 0.0f, 0)));
+	std::shared_ptr<FireworkSpawner> a(new FireworkSpawner(150, D3DXVECTOR3(150.0f, -200.0f, 0)));
+	std::shared_ptr<FireworkSpawner> b(new FireworkSpawner(200, D3DXVECTOR3(0.0f, -200.0f, 0)));
+	std::shared_ptr<FireworkSpawner> c(new FireworkSpawner(150, D3DXVECTOR3(-150.0f, -200.0f, 0)));
 
 	g_Spawners.push_back(a);
 	g_Spawners.push_back(b);
@@ -283,6 +356,9 @@ void SetupParticleSystems()
 	}
 
 	CurrentNoise = g_noise.begin();
+
+	//setup skybox
+	D3DXCreateTextureFromFile(device, "skybox.jpg", &skyboxTex);
 
 }
 
