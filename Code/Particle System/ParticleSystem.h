@@ -505,6 +505,7 @@ public:
 
 		//move the rocket up along the y axis a little
 		origin_ += RocketVel;
+		origin_.x += windSpeed;
 
 		//check if time to explode
 		if (!activated)
@@ -576,8 +577,8 @@ private:
 
 		// Now calculate the particle's horizontal and depth components.
 		// The particle can be ejected at a random angle, around a sphere.
-		float direction_angle = (float)(D3DXToRadian(random_number(95, 105)));
-		float launch_angle_ = (float)(D3DXToRadian(random_number(10, 20)));
+		float direction_angle = (float)(D3DXToRadian(random_number(85, 95)));
+		float launch_angle_ = (float)(D3DXToRadian(0));
 
 		// Calculate the vertical component of velocity.
 		p->velocity_.y = launch_velocity_ * (float)sin(launch_angle_);
