@@ -18,7 +18,7 @@ class PARTICLE_SYSTEM_BASE;
 //global vars
 LPDIRECT3DDEVICE9       device = NULL;	// The rendering device
 std::vector<std::shared_ptr<PARTICLE_SYSTEM_BASE>> g_Particles;
-float windSpeed = 2.0f;
+float windSpeed = 0.0f;
 
 void CreateRocket(D3DXVECTOR3 startLocation);
 void CreateExplosion(D3DXVECTOR3 startLocation);
@@ -202,6 +202,7 @@ class FOUNTAIN_CLASS : public PARTICLE_SYSTEM_BASE
 			{
 				if (p -> lifetime_ > 0)	// Update only if this particle is alive.
 				{
+					--(p->lifetime_);
 					// Calculate the new position of the particle...
 
 					// Vertical distance.
@@ -212,7 +213,7 @@ class FOUNTAIN_CLASS : public PARTICLE_SYSTEM_BASE
 					p -> position_.z = (p -> velocity_.z * p -> time_) + origin_.z;
 
 					p -> time_ += time_increment_;
-					--(p -> lifetime_);
+					
 
 					if (p -> lifetime_ == 0)	// Has this particle come to the end of it's life?
 					{
@@ -292,11 +293,7 @@ class FOUNTAIN_CLASS : public PARTICLE_SYSTEM_BASE
 class FIREWORK_EXPLOSION_CLASS : public PARTICLE_SYSTEM_BASE
 {
 public:
-	FIREWORK_EXPLOSION_CLASS() : PARTICLE_SYSTEM_BASE(), gravity_(0), terminate_on_floor_(false), floorY_(0) 
-	{
-		//start particles on birth
-		start_particles();
-	}
+	FIREWORK_EXPLOSION_CLASS() : PARTICLE_SYSTEM_BASE(), gravity_(0), terminate_on_floor_(false), floorY_(0) {}
 
 	HRESULT initialise()
 	{
@@ -311,16 +308,25 @@ public:
 		// Update the particles that are still alive...
 		for (std::vector<PARTICLE>::iterator p(particles_.begin()); p != particles_.end(); ++p)
 		{
+
 			if (p->lifetime_ > 0)	// Update only if this particle is alive.
 			{
 				// Calculate the new position of the particle...
 
 				// Vertical distance.
-				float s = (p->velocity_.y * p->time_) + (gravity_ * p->time_ * p->time_);
+				/*float s = (p->velocity_.y * p->time_) + gravity_;
 
 				p->position_.y = s + origin_.y;
 				p->position_.x = (p->velocity_.x * p->time_) + origin_.x;
-				p->position_.z = (p->velocity_.z * p->time_) + origin_.z;
+				p->position_.z = (p->velocity_.z * p->time_) + origin_.z;*/
+
+				p->position_.y += p->velocity_.y + gravity_;
+				p->position_.x += p->velocity_.x + windSpeed;
+				p->position_.z += p->velocity_.z;
+
+				p->velocity_.y *= time_increment_;
+				p->velocity_.x *= time_increment_; 
+				p->velocity_.z *= time_increment_;
 
 				p->time_ += time_increment_;
 				--(p->lifetime_);
@@ -392,7 +398,7 @@ private:
 		if (p == particles_.end()) return;	// Safety net - if there are no dead particles, don't start any new ones...
 
 		// Reset the particle's time (for calculating it's position with s = ut+0.5t*t)
-		p->time_ = 0;
+		p->time_ = 1;
 
 		// Now calculate the particle's horizontal and depth components.
 		// The particle can be ejected at a random angle, around a sphere.
@@ -409,6 +415,9 @@ private:
 
 		//have random lifetime
 		int n = random_number(0, max_lifetime_);
+
+		//set initial position
+		p->position_ = origin_;
 
 		p->lifetime_ = n;
 
@@ -645,13 +654,13 @@ void CreateExplosion(D3DXVECTOR3 startLocation)
 	std::shared_ptr<FIREWORK_EXPLOSION_CLASS> f(new FIREWORK_EXPLOSION_CLASS);
 
 	////add a firework1
-	f->max_particles_ = 200;
+	f->max_particles_ = 300;
 	f->origin_ = startLocation;
-	f->gravity_ = -0.75f;
-	f->launch_velocity_ = 10.0f;
-	f->time_increment_ = 0.05f;
-	f->max_lifetime_ = 300;
-	f->particle_size_ = 3.0f;
+	f->gravity_ = -0.5f;
+	f->launch_velocity_ = 5.0f;
+	f->time_increment_ = 0.95;
+	f->max_lifetime_ = 100;
+	f->particle_size_ = 1.0f;
 
 	f->particle_texture_ = getRandomTexture();
 

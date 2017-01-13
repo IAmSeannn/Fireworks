@@ -9,6 +9,7 @@
 #include <Windows.h>	// Windows library (for window functions, menus, dialog boxes, etc)
 #include "particlesystem.h"
 #include <string>
+#include "PerlinNoise.h"
 
 //---------------------------------------------------------------------------------------------------------------------------------
 // Global variables
@@ -17,6 +18,10 @@ LPDIRECT3D9             d3d		= NULL;	// Used to create the device
 LPD3DXMESH g_BoxMesh = NULL;						// Mesh used for the floor.
 
 std::vector<std::shared_ptr<FireworkSpawner>> g_Spawners;
+
+//noise
+std::vector<double> g_noise;
+std::vector<double>::iterator CurrentNoise;
 
 //testing for text
 ID3DXFont *font;
@@ -134,6 +139,26 @@ void SetupLights()
 
 void Update()
 {
+	//UPDATE WIND
+	if(random_number(1, 100) >= 95)
+	{
+		if (CurrentNoise != g_noise.end())
+		{
+			++CurrentNoise;
+		}
+		else
+		{
+			CurrentNoise = g_noise.begin();
+		}
+
+		float f = (float)(*CurrentNoise);
+		//d is between 0 and 255
+		f = f * 2.0f;
+		f -= 1.0f;
+
+		windSpeed = f;
+	}
+
 	//UPDATE ALL SPAWNERS
 
 	for (auto s : g_Spawners)
@@ -239,6 +264,26 @@ void SetupParticleSystems()
 	SetRect(&fRectangle, 0, 0, 500, 300);
 
 	message = "";
+
+	//setup noise
+	PerlinNoise pn(random_number());
+
+	for (unsigned int i = 0; i < 600; ++i)
+	{     // y
+		for (unsigned int j = 0; j < 600; ++j)
+		{  // x
+			double x = (double)j / ((double)600);
+			double y = (double)i / ((double)600);
+
+			// Typical Perlin noise
+			double n = pn.noise(10 * x, 10 * y, 0.8);
+
+			g_noise.push_back(n);
+		}
+	}
+
+	CurrentNoise = g_noise.begin();
+
 }
 
 //-----------------------------------------------------------------------------
@@ -268,7 +313,7 @@ int WINAPI WinMain(HINSTANCE hInst, HINSTANCE, LPSTR, int)
     RegisterClassEx(&wc);
 
     // Create the application's window
-    HWND hWnd = CreateWindow("PSystem", "Particle System Demonstration", WS_OVERLAPPEDWINDOW, 50, 20, 700, 700, GetDesktopWindow(), NULL, wc.hInstance, NULL);
+    HWND hWnd = CreateWindow("PSystem", "Particle System Demonstration", WS_OVERLAPPEDWINDOW, 50, 20, 1280, 960, GetDesktopWindow(), NULL, wc.hInstance, NULL);
 
 	// Seed the random number generator with the value
 	// from the high resolution CPU counter.
