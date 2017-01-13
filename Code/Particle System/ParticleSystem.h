@@ -18,6 +18,7 @@ class PARTICLE_SYSTEM_BASE;
 //global vars
 LPDIRECT3DDEVICE9       device = NULL;	// The rendering device
 std::vector<std::shared_ptr<PARTICLE_SYSTEM_BASE>> g_Particles;
+float windSpeed = 2.0f;
 
 void CreateRocket(D3DXVECTOR3 startLocation);
 void CreateExplosion(D3DXVECTOR3 startLocation);

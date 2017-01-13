@@ -8,6 +8,7 @@
 
 #include <Windows.h>	// Windows library (for window functions, menus, dialog boxes, etc)
 #include "particlesystem.h"
+#include <string>
 
 //---------------------------------------------------------------------------------------------------------------------------------
 // Global variables
@@ -16,6 +17,11 @@ LPDIRECT3D9             d3d		= NULL;	// Used to create the device
 LPD3DXMESH g_BoxMesh = NULL;						// Mesh used for the floor.
 
 std::vector<std::shared_ptr<FireworkSpawner>> g_Spawners;
+
+//testing for text
+ID3DXFont *font;
+RECT fRectangle;
+std::string message;
 
 //---------------------------------------------------------------------------------------------------------------------------------
 // Initialise Direct 3D.
@@ -57,6 +63,7 @@ void CleanUp()
     SAFE_RELEASE(g_BoxMesh);
 	SAFE_RELEASE(device);
     SAFE_RELEASE(d3d);
+	SAFE_RELEASE(font);
 }
 
 //-----------------------------------------------------------------------------
@@ -191,6 +198,13 @@ void render()
 			p->render();
 		}
 
+		//draw text
+		if (font)
+		{
+			message = "Wind Speed: " + std::to_string(windSpeed);
+			font->DrawTextA(NULL, message.c_str(), -1, &fRectangle, DT_LEFT, D3DCOLOR_XRGB(255,255,255));
+		}
+
         device -> EndScene();
     }
 
@@ -217,6 +231,14 @@ void SetupParticleSystems()
 	g_Spawners.push_back(b);
 	g_Spawners.push_back(c);
 
+	//setup text
+	font = NULL;
+	D3DXCreateFont(device, 20, 15, FW_NORMAL, 1, false, DEFAULT_CHARSET, OUT_DEFAULT_PRECIS, 
+		ANTIALIASED_QUALITY, FF_DONTCARE, "Arial", &font);
+
+	SetRect(&fRectangle, 0, 0, 500, 300);
+
+	message = "";
 }
 
 //-----------------------------------------------------------------------------
