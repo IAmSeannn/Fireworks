@@ -306,48 +306,48 @@ public:
 	void update()
 	{
 		// Update the particles that are still alive...
-		for (std::vector<PARTICLE>::iterator p(particles_.begin()); p != particles_.end(); ++p)
+		//for (std::vector<PARTICLE>::iterator p(particles_.begin()); p != particles_.end(); ++p)
+		for(int i = 0; i < particles_.size(); ++i)
 		{
-
-			if (p->lifetime_ > 0)	// Update only if this particle is alive.
+			if (particles_[i].lifetime_ > 0)	// Update only if this particle is alive.
 			{
 				// Calculate the new position of the particle...
+				particles_[i].position_.y += particles_[i].velocity_.y + gravity_;
+				particles_[i].position_.x += particles_[i].velocity_.x + windSpeed;
+				particles_[i].position_.z += particles_[i].velocity_.z;
 
-				// Vertical distance.
-				/*float s = (p->velocity_.y * p->time_) + gravity_;
+				particles_[i].velocity_.y *= time_increment_;
+				particles_[i].velocity_.x *= time_increment_;
+				particles_[i].velocity_.z *= time_increment_;
 
-				p->position_.y = s + origin_.y;
-				p->position_.x = (p->velocity_.x * p->time_) + origin_.x;
-				p->position_.z = (p->velocity_.z * p->time_) + origin_.z;*/
+				particles_[i].time_ += time_increment_;
+				--(particles_[i].lifetime_);
 
-				p->position_.y += p->velocity_.y + gravity_;
-				p->position_.x += p->velocity_.x + windSpeed;
-				p->position_.z += p->velocity_.z;
-
-				p->velocity_.y *= time_increment_;
-				p->velocity_.x *= time_increment_; 
-				p->velocity_.z *= time_increment_;
-
-				p->time_ += time_increment_;
-				--(p->lifetime_);
-
-				if (p->lifetime_ == 0)	// Has this particle come to the end of it's life?
-				{
-					--alive_particles_;		// If so, terminate it.
-				}
-				else
-				{
-					if (terminate_on_floor_)	// or has the particle hit the floor? if so, terminate it. Flag to determine if to do this.
-					{
-						if (p->position_.y < floorY_)
-						{
-							p->lifetime_ = 0;
-							--alive_particles_;
-						}
-					}
-				}
+				//if (p->lifetime_ <= 0)	// Has this particle come to the end of it's life?
+				//{
+				//	//particles_.erase(p);	//remove the particle, its no longer needed.
+				//	//--p;
+				//	--alive_particles_;		// If so, terminate it.
+				//}
+				//else
+				//{
+				//	if (terminate_on_floor_)	// or has the particle hit the floor? if so, terminate it. Flag to determine if to do this.
+				//	{
+				//		if (p->position_.y < floorY_)
+				//		{
+				//			p->lifetime_ = 0;
+				//			--alive_particles_;
+				//		}
+				//	}
+				//}
+			}
+			else
+			{
+				particles_.erase(particles_.begin()+i);	//remove the particle, its no longer needed.
+				--alive_particles_;
 			}
 		}
+		
 
 		// Create a pointer to the first vertex in the buffer
 		// Also lock it, so nothing else can touch it while the values are being inserted.
@@ -373,7 +373,7 @@ public:
 
 		points_->Unlock();
 
-		if (alive_particles_ == 0)
+		if (alive_particles_ <= 0)
 		{
 			safeToDelete = true;
 		}
