@@ -68,7 +68,7 @@ struct PARTICLE
 class PARTICLE_SYSTEM_BASE
 {
 	public:
-		PARTICLE_SYSTEM_BASE() : max_particles_(0), alive_particles_(0), max_lifetime_(0), origin_(D3DXVECTOR3(0, 0, 0)), points_(NULL), particle_size_(1.0f), safeToDelete(false), nextSystem(NULL)
+		PARTICLE_SYSTEM_BASE() : max_particles_(0), alive_particles_(0), max_lifetime_(0), origin_(D3DXVECTOR3(0, 0, 0)), points_(NULL), particle_size_(1.0f), safeToDelete(false)
 		{}
 
 		~PARTICLE_SYSTEM_BASE()
@@ -152,7 +152,7 @@ class PARTICLE_SYSTEM_BASE
 		float time_increment_;					// Used to increase the value of 'time'for each particle - used to calculate vertical position.
 		float particle_size_;					// Size of the point.
 		bool safeToDelete;
-		std::shared_ptr<PARTICLE_SYSTEM_BASE> nextSystem;
+		std::vector<std::shared_ptr<PARTICLE_SYSTEM_BASE>> nextSystems;
 
 	private:
 
@@ -184,9 +184,12 @@ class PARTICLE_SYSTEM_BASE
 		//start next system in chain
 		void startNextSystem()
 		{
-			nextSystem->origin_ = origin_;
-			nextSystem->initialise();
-			g_Particles.push_back(nextSystem);
+			for (auto s : nextSystems)
+			{
+				s->origin_ = origin_;
+				s->initialise();
+				g_Particles.push_back(s);
+			}
 		}
 };
 
@@ -524,11 +527,7 @@ public:
 			else
 			{
 				activated = true;
-				//explode explosion
-				if (nextSystem != NULL)
-				{
-					startNextSystem();
-				}
+				startNextSystem();
 			}
 		}
 		else
@@ -686,7 +685,7 @@ public:
 		//create a complete firework for testing
 		std::shared_ptr<FIREWORK_ROCKET_CLASS> first = CreateRocket(startLocation);
 		std::shared_ptr<FIREWORK_EXPLOSION_CLASS> second = CreateExplosion(startLocation);
-		first->nextSystem = second;
+		first->nextSystems.push_back(second);
 
 		first->initialise();
 		g_Particles.push_back(first);
