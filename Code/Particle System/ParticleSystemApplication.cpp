@@ -355,13 +355,18 @@ void SetupParticleSystems()
 	// SPAWNERS
 	//---------------------------------------
 
-	std::shared_ptr<FireworkSpawner> a(new FireworkSpawner(500, D3DXVECTOR3(150.0f, -200.0f, 0)));
-	std::shared_ptr<FireworkSpawner> b(new FireworkSpawner(700, D3DXVECTOR3(0.0f, -200.0f, 0)));
-	std::shared_ptr<FireworkSpawner> c(new FireworkSpawner(500, D3DXVECTOR3(-150.0f, -200.0f, 0)));
+	std::shared_ptr<FireworkSpawner> a(new FireworkSpawner(D3DXVECTOR3(150.0f, -200.0f, 0)));
+	std::shared_ptr<FireworkSpawner> b(new FireworkSpawner(D3DXVECTOR3(0.0f, -200.0f, 0)));
+	std::shared_ptr<FireworkSpawner> c(new FireworkSpawner(D3DXVECTOR3(-150.0f, -200.0f, 0)));
+	std::shared_ptr<FireworkSpawner> d(new FireworkSpawner(D3DXVECTOR3(75.0f, -200.0f, 0)));
+	std::shared_ptr<FireworkSpawner> e(new FireworkSpawner(D3DXVECTOR3(-75.0f, -200.0f, 0)));
+
 
 	g_Spawners.push_back(a);
 	g_Spawners.push_back(b);
 	g_Spawners.push_back(c);
+	g_Spawners.push_back(d);
+	g_Spawners.push_back(e);
 
 }
 

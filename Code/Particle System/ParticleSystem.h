@@ -551,10 +551,11 @@ private:
 		// Now calculate the particle's horizontal and depth components.
 		// The particle can be ejected at a random angle, around a sphere.
 		float direction_angle = (float)(D3DXToRadian(random_number(85, 95)));
-		float launch_angle_ = (float)(D3DXToRadian(0));
+		float launch_angle_ = (float)(D3DXToRadian(random_number(0, 50)));
 
 		// Calculate the vertical component of velocity.
-		p->velocity_.y = ((float)random_number(200, 300)) / 100 * -1;
+		//p->velocity_.y = ((float)random_number(200, 300)) / 100 * -1;
+		p->velocity_.y = launch_velocity_ * (float)sin(launch_angle_);
 
 		// Calculate the horizontal components of velocity.
 		// This is X and Z dimensions.
@@ -600,7 +601,7 @@ std::shared_ptr<FIREWORK_ROCKET_CLASS> CreateRocket(D3DXVECTOR3 startLocation)
 
 	//add a rocket1
 	f->max_particles_ = 500;
-	f->rocketTime = 160 + random_number(0, 20);
+	f->rocketTime = 40 + random_number(0, 20);
 	f->origin_ = startLocation;
 	f->start_interval_ = 1;
 	f->start_timer_ = 0;
@@ -615,7 +616,7 @@ std::shared_ptr<FIREWORK_ROCKET_CLASS> CreateRocket(D3DXVECTOR3 startLocation)
 	float z = (float)random_number(0, 30);
 	x = ((x - 15) / 100);
 	z = ((z - 15) / 100);
-	f->RocketVel = D3DXVECTOR3(x, 2.0f, z);
+	f->RocketVel = D3DXVECTOR3(x, 6.0f, z);
 
 	f->particle_texture_ = getRandomTexture();
 	return f;
@@ -721,8 +722,8 @@ public:
 class FireworkSpawner
 {
 public:
-	FireworkSpawner(int count, D3DXVECTOR3 Loc)
-		: MAX_COUNTER(count), counter(0), Location(Loc) {};
+	FireworkSpawner(D3DXVECTOR3 Loc)
+		: MAX_COUNTER(2000), counter(0), Location(Loc) {};
 	~FireworkSpawner() {};
 
 	D3DXVECTOR3 Location;
@@ -757,6 +758,3 @@ public:
 	std::shared_ptr<PARTICLE_SYSTEM_BASE> firstFirework;
 	std::shared_ptr<PARTICLE_SYSTEM_BASE> lastFirework;
 };
-
-
-DWORD AlphaValue;

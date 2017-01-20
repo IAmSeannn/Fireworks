@@ -1,6 +1,1 @@
-﻿  ParticleSystemApplication.cpp
-c:\users\iamse\documents\github\fireworks\code\particle system\ParticleSystem.h(321): warning C4018: '<' : signed/unsigned mismatch
-c:\users\iamse\documents\github\fireworks\code\particle system\ParticleSystem.h(603): warning C4244: '=' : conversion from 'unsigned int' to 'float', possible loss of data
-c:\users\iamse\documents\github\fireworks\code\particle system\ParticleSystem.h(633): warning C4305: '=' : truncation from 'double' to 'float'
-ParticleSystemApplication.cpp(246): warning C4018: '<' : signed/unsigned mismatch
-  Particle System.vcxproj -> C:\Users\iamse\Documents\GitHub\Fireworks\Code\Particle System\.\Debug\Particle System.exe
+﻿  Particle System.vcxproj -> C:\Users\iamse\Documents\GitHub\Fireworks\Code\Particle System\.\Debug\Particle System.exe
