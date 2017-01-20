@@ -68,7 +68,7 @@ struct PARTICLE
 class PARTICLE_SYSTEM_BASE
 {
 	public:
-		PARTICLE_SYSTEM_BASE() : max_particles_(0), alive_particles_(0), max_lifetime_(0), origin_(D3DXVECTOR3(0, 0, 0)), points_(NULL), particle_size_(1.0f), safeToDelete(false)
+		PARTICLE_SYSTEM_BASE() : max_particles_(0), alive_particles_(0), max_lifetime_(0), origin_(D3DXVECTOR3(0, 0, 0)), points_(NULL), particle_size_(1.0f), safeToDelete(false), alpha(255)
 		{}
 
 		~PARTICLE_SYSTEM_BASE()
@@ -123,6 +123,7 @@ class PARTICLE_SYSTEM_BASE
 			device-> SetRenderState(D3DRS_ALPHABLENDENABLE, true);
 			device-> SetRenderState(D3DRS_SRCBLEND,  D3DBLEND_SRCALPHA);
 			device-> SetRenderState(D3DRS_DESTBLEND, D3DBLEND_INVSRCALPHA);
+
 			device-> SetTextureStageState(0, D3DTSS_COLORARG1, D3DTA_TEXTURE);
 			device-> SetTextureStageState(0, D3DTSS_COLOROP,	D3DTOP_SELECTARG1);
 			device-> SetTextureStageState(0, D3DTSS_ALPHAARG1, D3DTA_TEXTURE);
@@ -153,6 +154,7 @@ class PARTICLE_SYSTEM_BASE
 		float particle_size_;					// Size of the point.
 		bool safeToDelete;
 		std::vector<std::shared_ptr<PARTICLE_SYSTEM_BASE>> nextSystems;
+		int alpha;
 
 	private:
 
@@ -331,24 +333,6 @@ public:
 
 				particles_[i].time_ += time_increment_;
 				--(particles_[i].lifetime_);
-
-				//if (p->lifetime_ <= 0)	// Has this particle come to the end of it's life?
-				//{
-				//	//particles_.erase(p);	//remove the particle, its no longer needed.
-				//	//--p;
-				//	--alive_particles_;		// If so, terminate it.
-				//}
-				//else
-				//{
-				//	if (terminate_on_floor_)	// or has the particle hit the floor? if so, terminate it. Flag to determine if to do this.
-				//	{
-				//		if (p->position_.y < floorY_)
-				//		{
-				//			p->lifetime_ = 0;
-				//			--alive_particles_;
-				//		}
-				//	}
-				//}
 			}
 			else
 			{
@@ -456,15 +440,6 @@ public:
 		{
 			if (p->lifetime_ > 0)	// Update only if this particle is alive.
 			{
-				// Calculate the new position of the particle...
-
-				// Vertical distance.
-				/*float s = (p->velocity_.y * p->time_) + (gravity_ * p->time_ * p->time_);
-
-				p->position_.y = s + origin_.y;
-				p->position_.x = (p->velocity_.x * p->time_) + origin_.x;
-				p->position_.z = (p->velocity_.z * p->time_) + origin_.z;*/
-
 				p->position_ += p->velocity_;
 				p->position_.x += windSpeed;
 
@@ -474,17 +449,6 @@ public:
 				if (p->lifetime_ == 0)	// Has this particle come to the end of it's life?
 				{
 					--alive_particles_;		// If so, terminate it.
-				}
-				else
-				{
-					if (terminate_on_floor_)	// or has the particle hit the floor? if so, terminate it. Flag to determine if to do this.
-					{
-						if (p->position_.y < floorY_)
-						{
-							p->lifetime_ = 0;
-							--alive_particles_;
-						}
-					}
 				}
 			}
 		}
@@ -590,7 +554,7 @@ private:
 		float launch_angle_ = (float)(D3DXToRadian(0));
 
 		// Calculate the vertical component of velocity.
-		p->velocity_.y = launch_velocity_ * (float)sin(launch_angle_);
+		p->velocity_.y = ((float)random_number(200, 300)) / 100 * -1;
 
 		// Calculate the horizontal components of velocity.
 		// This is X and Z dimensions.
@@ -608,8 +572,6 @@ private:
 //-----------------------------------------------------------------------------
 // FIREWORK CREATORS
 //-----------------------------------------------------------------------------
-
-
 
 LPDIRECT3DTEXTURE9 &getRandomTexture()
 {
@@ -698,6 +660,58 @@ public:
 		first->initialise();
 		g_Particles.push_back(first);
 	}
+
+	void ThickRocket(D3DXVECTOR3 startLocation)
+	{
+		//create a complete firework for testing
+		std::shared_ptr<FIREWORK_ROCKET_CLASS> first = CreateRocket(startLocation);
+		first->max_lifetime_ = 50;
+		first->start_particles_ = 5;
+		first->particle_size_ = 2.0f;
+		first->initialise();
+		g_Particles.push_back(first);
+	}
+
+	void DoubleRocket(D3DXVECTOR3 startLocation)
+	{
+		//create a complete firework for testing
+		std::shared_ptr<FIREWORK_ROCKET_CLASS> first = CreateRocket(startLocation);
+
+		//create second set of fireworks, add 10
+		for (int i = 0; i < 10; i++)
+		{
+			std::shared_ptr<FIREWORK_ROCKET_CLASS> second = CreateRocket(startLocation);
+			second->RocketVel = D3DXVECTOR3((((float)random_number(0, 400)) / 100)-2.0f, (((float)random_number(0, 400)) / 100) - 2.0f, (((float)random_number(0, 400)) / 100) - 2.0f);
+			second->rocketTime = 40;
+			first->nextSystems.push_back(second);
+		}
+
+		first->initialise();
+		g_Particles.push_back(first);
+	}
+
+	void DoubleRocketExplosion(D3DXVECTOR3 startLocation)
+	{
+		//create a complete firework for testing
+		std::shared_ptr<FIREWORK_ROCKET_CLASS> first = CreateRocket(startLocation);
+
+		//create second set of fireworks, add 10
+		for (int i = 0; i < 10; i++)
+		{
+			std::shared_ptr<FIREWORK_ROCKET_CLASS> second = CreateRocket(startLocation);
+			second->RocketVel = D3DXVECTOR3((((float)random_number(0, 400)) / 100) - 2.0f, (((float)random_number(0, 400)) / 100) - 2.0f, (((float)random_number(0, 400)) / 100) - 2.0f);
+			second->rocketTime = 40;
+
+			//create explosion
+			std::shared_ptr<FIREWORK_EXPLOSION_CLASS> third = CreateExplosion(startLocation);
+			second->nextSystems.push_back(third);
+
+			first->nextSystems.push_back(second);
+		}
+
+		first->initialise();
+		g_Particles.push_back(first);
+	}
 };
 
 //-----------------------------------------------------------------------------
@@ -721,13 +735,13 @@ public:
 		if (counter == 0)
 		{
 			//activate
-			t.RocketWithExplosion(Location);
+			t.ThickRocket(Location);
 			//reset
 			counter = MAX_COUNTER;
 		}
-		else if(counter == 100)
+		else if(counter == 250)
 		{
-			t.BasicRocket(Location);
+			t.DoubleRocketExplosion(Location);
 			--counter;
 		}
 		else
@@ -743,3 +757,6 @@ public:
 	std::shared_ptr<PARTICLE_SYSTEM_BASE> firstFirework;
 	std::shared_ptr<PARTICLE_SYSTEM_BASE> lastFirework;
 };
+
+
+DWORD AlphaValue;

@@ -320,15 +320,6 @@ void SetupParticleSystems()
 	D3DXCreateTextureFromFile(device, "blue.png", &blueTex);
 	D3DXCreateTextureFromFile(device, "green.png", &greenTex);
 
-	//create spawner a
-	std::shared_ptr<FireworkSpawner> a(new FireworkSpawner(150, D3DXVECTOR3(150.0f, -200.0f, 0)));
-	std::shared_ptr<FireworkSpawner> b(new FireworkSpawner(200, D3DXVECTOR3(0.0f, -200.0f, 0)));
-	std::shared_ptr<FireworkSpawner> c(new FireworkSpawner(150, D3DXVECTOR3(-150.0f, -200.0f, 0)));
-
-	g_Spawners.push_back(a);
-	g_Spawners.push_back(b);
-	g_Spawners.push_back(c);
-
 	//setup text
 	font = NULL;
 	D3DXCreateFont(device, 20, 15, FW_NORMAL, 1, false, DEFAULT_CHARSET, OUT_DEFAULT_PRECIS, 
@@ -359,6 +350,18 @@ void SetupParticleSystems()
 
 	//setup skybox
 	D3DXCreateTextureFromFile(device, "skybox.jpg", &skyboxTex);
+
+	//---------------------------------------
+	// SPAWNERS
+	//---------------------------------------
+
+	std::shared_ptr<FireworkSpawner> a(new FireworkSpawner(500, D3DXVECTOR3(150.0f, -200.0f, 0)));
+	std::shared_ptr<FireworkSpawner> b(new FireworkSpawner(700, D3DXVECTOR3(0.0f, -200.0f, 0)));
+	std::shared_ptr<FireworkSpawner> c(new FireworkSpawner(500, D3DXVECTOR3(-150.0f, -200.0f, 0)));
+
+	g_Spawners.push_back(a);
+	g_Spawners.push_back(b);
+	g_Spawners.push_back(c);
 
 }
 
