@@ -20,9 +20,6 @@ LPDIRECT3DDEVICE9       device = NULL;	// The rendering device
 std::vector<std::shared_ptr<PARTICLE_SYSTEM_BASE>> g_Particles;
 float windSpeed = 0.0f;
 
-void CreateRocket(D3DXVECTOR3 startLocation);
-void CreateExplosion(D3DXVECTOR3 startLocation);
-
 LPDIRECT3DTEXTURE9	blueTex = NULL, redTex = NULL, yellowTex = NULL, greenTex = NULL, skyboxTex = NULL;
 
 //-----------------------------------------------------------------------------
@@ -71,7 +68,7 @@ struct PARTICLE
 class PARTICLE_SYSTEM_BASE
 {
 	public:
-		PARTICLE_SYSTEM_BASE() : max_particles_(0), alive_particles_(0), max_lifetime_(0), origin_(D3DXVECTOR3(0, 0, 0)), points_(NULL), particle_size_(1.0f), safeToDelete(false)
+		PARTICLE_SYSTEM_BASE() : max_particles_(0), alive_particles_(0), max_lifetime_(0), origin_(D3DXVECTOR3(0, 0, 0)), points_(NULL), particle_size_(1.0f), safeToDelete(false), nextSystem(NULL)
 		{}
 
 		~PARTICLE_SYSTEM_BASE()
@@ -155,6 +152,7 @@ class PARTICLE_SYSTEM_BASE
 		float time_increment_;					// Used to increase the value of 'time'for each particle - used to calculate vertical position.
 		float particle_size_;					// Size of the point.
 		bool safeToDelete;
+		std::shared_ptr<PARTICLE_SYSTEM_BASE> nextSystem;
 
 	private:
 
@@ -182,6 +180,14 @@ class PARTICLE_SYSTEM_BASE
 		
 		// Specific implemention to define to policy for starting/creating a single particle.
 		virtual void start_single_particle(std::vector<PARTICLE>::iterator &) = 0;
+
+		//start next system in chain
+		void startNextSystem()
+		{
+			nextSystem->origin_ = origin_;
+			nextSystem->initialise();
+			g_Particles.push_back(nextSystem);
+		}
 };
 
 //-----------------------------------------------------------------------------------------------------------------------------------------------------
@@ -519,7 +525,10 @@ public:
 			{
 				activated = true;
 				//explode explosion
-				CreateExplosion(origin_);
+				if (nextSystem != NULL)
+				{
+					startNextSystem();
+				}
 			}
 		}
 		else
@@ -601,6 +610,8 @@ private:
 // FIREWORK CREATORS
 //-----------------------------------------------------------------------------
 
+
+
 LPDIRECT3DTEXTURE9 &getRandomTexture()
 {
 	int i = random_number(0, 4);
@@ -622,13 +633,13 @@ LPDIRECT3DTEXTURE9 &getRandomTexture()
 	}
 }
 
-void CreateRocket(D3DXVECTOR3 startLocation)
+std::shared_ptr<FIREWORK_ROCKET_CLASS> CreateRocket(D3DXVECTOR3 startLocation)
 {
 	std::shared_ptr<FIREWORK_ROCKET_CLASS> f(new FIREWORK_ROCKET_CLASS);
 
 	//add a rocket1
 	f->max_particles_ = 500;
-	f->rocketTime = 160 + random_number(0,20);
+	f->rocketTime = 160 + random_number(0, 20);
 	f->origin_ = startLocation;
 	f->start_interval_ = 1;
 	f->start_timer_ = 0;
@@ -646,12 +657,10 @@ void CreateRocket(D3DXVECTOR3 startLocation)
 	f->RocketVel = D3DXVECTOR3(x, 2.0f, z);
 
 	f->particle_texture_ = getRandomTexture();
-
-	f->initialise();
-	g_Particles.push_back(f);
+	return f;
 }
 
-void CreateExplosion(D3DXVECTOR3 startLocation)
+std::shared_ptr<FIREWORK_EXPLOSION_CLASS> CreateExplosion(D3DXVECTOR3 startLocation)
 {
 	std::shared_ptr<FIREWORK_EXPLOSION_CLASS> f(new FIREWORK_EXPLOSION_CLASS);
 
@@ -666,9 +675,31 @@ void CreateExplosion(D3DXVECTOR3 startLocation)
 
 	f->particle_texture_ = getRandomTexture();
 
-	f->initialise();
-	g_Particles.push_back(f);
+	return f;
 }
+
+class FireworkTemplates
+{
+public:
+	void RocketWithExplosion(D3DXVECTOR3 startLocation)
+	{
+		//create a complete firework for testing
+		std::shared_ptr<FIREWORK_ROCKET_CLASS> first = CreateRocket(startLocation);
+		std::shared_ptr<FIREWORK_EXPLOSION_CLASS> second = CreateExplosion(startLocation);
+		first->nextSystem = second;
+
+		first->initialise();
+		g_Particles.push_back(first);
+	}
+
+	void BasicRocket(D3DXVECTOR3 startLocation)
+	{
+		//create a complete firework for testing
+		std::shared_ptr<FIREWORK_ROCKET_CLASS> first = CreateRocket(startLocation);
+		first->initialise();
+		g_Particles.push_back(first);
+	}
+};
 
 //-----------------------------------------------------------------------------
 // FIREWORK SPAWNER
@@ -678,25 +709,38 @@ class FireworkSpawner
 {
 public:
 	FireworkSpawner(int count, D3DXVECTOR3 Loc)
-	: MAX_COUNTER(count), counter(0), Location(Loc){};
+		: MAX_COUNTER(count), counter(0), Location(Loc) {};
 	~FireworkSpawner() {};
 
 	D3DXVECTOR3 Location;
 	int counter;
 	const int MAX_COUNTER;
+	FireworkTemplates t;
 
 	void Update()
 	{
 		if (counter == 0)
 		{
 			//activate
-			CreateRocket(Location);
+			t.RocketWithExplosion(Location);
 			//reset
 			counter = MAX_COUNTER;
+		}
+		else if(counter == 100)
+		{
+			t.BasicRocket(Location);
+			--counter;
 		}
 		else
 		{
 			--counter;
 		}
 	}
+};
+
+class Firework
+{
+public:
+	std::shared_ptr<PARTICLE_SYSTEM_BASE> firstFirework;
+	std::shared_ptr<PARTICLE_SYSTEM_BASE> lastFirework;
 };

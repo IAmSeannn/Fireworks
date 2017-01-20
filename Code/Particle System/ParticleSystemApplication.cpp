@@ -7,7 +7,7 @@
 #define _CRT_RAND_S	// Define this before any includes to select correct rand function in stdlib.h.
 
 #include <Windows.h>	// Windows library (for window functions, menus, dialog boxes, etc)
-#include "particlesystem.h"
+#include "ParticleSystem.h"
 #include <string>
 #include "PerlinNoise.h"
 
