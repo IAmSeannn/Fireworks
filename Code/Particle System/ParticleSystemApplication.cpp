@@ -355,11 +355,11 @@ void SetupParticleSystems()
 	// SPAWNERS
 	//---------------------------------------
 
-	std::shared_ptr<FireworkSpawner> a(new FireworkSpawner(D3DXVECTOR3(150.0f, -200.0f, 0)));
-	std::shared_ptr<FireworkSpawner> b(new FireworkSpawner(D3DXVECTOR3(0.0f, -200.0f, 0)));
-	std::shared_ptr<FireworkSpawner> c(new FireworkSpawner(D3DXVECTOR3(-150.0f, -200.0f, 0)));
-	std::shared_ptr<FireworkSpawner> d(new FireworkSpawner(D3DXVECTOR3(75.0f, -200.0f, 0)));
-	std::shared_ptr<FireworkSpawner> e(new FireworkSpawner(D3DXVECTOR3(-75.0f, -200.0f, 0)));
+	std::shared_ptr<FireworkSpawnerAlpha> a(new FireworkSpawnerAlpha(D3DXVECTOR3(150.0f, -200.0f, 0)));
+	std::shared_ptr<FireworkSpawnerBravo> b(new FireworkSpawnerBravo(D3DXVECTOR3(75.0f, -200.0f, 0)));
+	std::shared_ptr<FireworkSpawnerCharlie> c(new FireworkSpawnerCharlie(D3DXVECTOR3(0.0f, -200.0f, 0)));
+	std::shared_ptr<FireworkSpawner> d(new FireworkSpawnerDelta(D3DXVECTOR3(-75.0f, -200.0f, 0)));
+	std::shared_ptr<FireworkSpawner> e(new FireworkSpawnerEcho(D3DXVECTOR3(-150.0f, -200.0f, 0)));
 
 
 	g_Spawners.push_back(a);

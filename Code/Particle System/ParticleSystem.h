@@ -673,6 +673,26 @@ public:
 		g_Particles.push_back(first);
 	}
 
+	void SprinklerRocket(D3DXVECTOR3 startLocation)
+	{
+		for (int i = 0; i < 10; ++i)
+		{
+			//create a complete firework for testing
+			std::shared_ptr<FIREWORK_ROCKET_CLASS> first = CreateRocket(startLocation);
+			//slightly random vel
+			float x = (float)random_number(0, 360);
+			float z = (float)random_number(0, 360);
+			x = ((x - 180) / 100);
+			z = ((z - 180) / 100);
+			first->RocketVel = D3DXVECTOR3(x, 6.0f, z);
+			first->max_lifetime_ = 50;
+			first->start_particles_ = 5;
+			first->particle_size_ = 2.0f;
+			first->initialise();
+			g_Particles.push_back(first);
+		}		
+	}
+
 	void DoubleRocket(D3DXVECTOR3 startLocation)
 	{
 		//create a complete firework for testing
@@ -733,28 +753,236 @@ public:
 
 	void Update()
 	{
-		if (counter == 0)
+		if (counter == MAX_COUNTER)
 		{
-			//activate
-			t.ThickRocket(Location);
-			//reset
-			counter = MAX_COUNTER;
-		}
-		else if(counter == 250)
-		{
-			t.DoubleRocketExplosion(Location);
-			--counter;
+			counter = 0;
 		}
 		else
 		{
-			--counter;
+			LaunchFirework();
+			++counter;
+		}
+	}
+
+	virtual void LaunchFirework() = 0;
+};
+
+class FireworkSpawnerAlpha : public FireworkSpawner
+{
+public:
+	FireworkSpawnerAlpha(D3DXVECTOR3 Loc) : FireworkSpawner(Loc) {};
+	~FireworkSpawnerAlpha() {};
+
+	void LaunchFirework()
+	{
+		switch (counter)
+		{
+		case 10:
+			t.ThickRocket(Location);
+			break;
+		case 50:
+			t.RocketWithExplosion(Location);
+			break;
+		case 200:
+			t.ThickRocket(Location);
+			break;
+		case 250:
+			t.ThickRocket(Location);
+			break;
+		case 410:
+			t.ThickRocket(Location);
+			break;
+		case 650:
+			t.DoubleRocketExplosion(Location);
+			break;
+		case 1050:
+			t.ThickRocket(Location);
+			break;
+		case 1200:
+			t.SprinklerRocket(Location);
+			break;
+		case 1400:
+			t.SprinklerRocket(Location);
+			break;
+		case 1700:
+			t.DoubleRocketExplosion(Location);
+			break;
 		}
 	}
 };
 
-class Firework
+class FireworkSpawnerBravo : public FireworkSpawner
 {
 public:
-	std::shared_ptr<PARTICLE_SYSTEM_BASE> firstFirework;
-	std::shared_ptr<PARTICLE_SYSTEM_BASE> lastFirework;
+	FireworkSpawnerBravo(D3DXVECTOR3 Loc) : FireworkSpawner(Loc) {};
+	~FireworkSpawnerBravo() {};
+
+	void LaunchFirework()
+	{
+		switch (counter)
+		{
+		case 10:
+			t.ThickRocket(Location);
+			break;
+		case 70:
+			t.RocketWithExplosion(Location);
+			break;
+		case 200:
+			t.ThickRocket(Location);
+			break;
+		case 270:
+			t.ThickRocket(Location);
+			break;
+		case 390:
+			t.ThickRocket(Location);
+			break;
+		case 430:
+			t.ThickRocket(Location);
+			break;
+		case 1060:
+			t.ThickRocket(Location);
+			break;
+		case 1300:
+			t.SprinklerRocket(Location);
+			break;
+		case 1450:
+			t.RocketWithExplosion(Location);
+			break;
+		}
+	}
+};
+
+class FireworkSpawnerCharlie : public FireworkSpawner
+{
+public:
+	FireworkSpawnerCharlie(D3DXVECTOR3 Loc) : FireworkSpawner(Loc) {};
+	~FireworkSpawnerCharlie() {};
+
+	void LaunchFirework()
+	{
+		switch (counter)
+		{
+		case 10:
+			t.ThickRocket(Location);
+			break;
+		case 90:
+			t.RocketWithExplosion(Location);
+			break;
+		case 200:
+			t.ThickRocket(Location);
+			break;
+		case 290:
+			t.ThickRocket(Location);
+			break;
+		case 370:
+			t.ThickRocket(Location);
+			break;
+		case 450:
+			t.ThickRocket(Location);
+			break;
+		case 500:
+			t.DoubleRocketExplosion(Location);
+			break;
+		case 950:
+			t.SprinklerRocket(Location);
+			break;
+		case 1070:
+			t.ThickRocket(Location);
+			break;
+		case 1200:
+			t.SprinklerRocket(Location);
+			break;
+		case 1400:
+			t.RocketWithExplosion(Location);
+			break;
+		case 1600:
+			t.DoubleRocketExplosion(Location);
+			break;
+		}
+	}
+};
+
+class FireworkSpawnerDelta : public FireworkSpawner
+{
+public:
+	FireworkSpawnerDelta(D3DXVECTOR3 Loc) : FireworkSpawner(Loc) {};
+	~FireworkSpawnerDelta() {};
+
+	void LaunchFirework()
+	{
+		switch (counter)
+		{
+		case 10:
+			t.ThickRocket(Location);
+			break;
+		case 110:
+			t.RocketWithExplosion(Location);
+			break;
+		case 200:
+			t.ThickRocket(Location);
+			break;
+		case 310:
+			t.ThickRocket(Location);
+			break;
+		case 350:
+			t.ThickRocket(Location);
+			break;
+		case 470:
+			t.ThickRocket(Location);
+			break;
+		case 1080:
+			t.ThickRocket(Location);
+			break;
+		case 1300:
+			t.SprinklerRocket(Location);
+			break;
+		case 1450:
+			t.RocketWithExplosion(Location);
+			break;
+		}
+	}
+};
+
+class FireworkSpawnerEcho : public FireworkSpawner
+{
+public:
+	FireworkSpawnerEcho(D3DXVECTOR3 Loc) : FireworkSpawner(Loc) {};
+	~FireworkSpawnerEcho() {};
+
+	void LaunchFirework()
+	{
+		switch (counter)
+		{
+		case 10:
+			t.ThickRocket(Location);
+			break;
+		case 130:
+			t.RocketWithExplosion(Location);
+			break;
+		case 200:
+			t.ThickRocket(Location);
+			break;
+		case 330:
+			t.ThickRocket(Location);
+			break;
+		case 490:
+			t.ThickRocket(Location);
+			break;
+		case 800:
+			t.DoubleRocketExplosion(Location);
+			break;
+		case 1090:
+			t.ThickRocket(Location);
+			break;
+		case 1200:
+			t.SprinklerRocket(Location);
+			break;
+		case 1400:
+			t.SprinklerRocket(Location);
+			break;
+		case 1700:
+			t.DoubleRocketExplosion(Location);
+			break;
+		}
+	}
 };
