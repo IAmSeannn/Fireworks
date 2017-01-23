@@ -4,6 +4,8 @@
 #include <algorithm>
 #include <numeric>
 
+//RETRIEVED FROM https://github.com/sol-prog/Perlin_Noise/
+
 // THIS IS A DIRECT TRANSLATION TO C++11 FROM THE REFERENCE
 // JAVA IMPLEMENTATION OF THE IMPROVED PERLIN FUNCTION (see http://mrl.nyu.edu/~perlin/noise/)
 // THE ORIGINAL JAVA IMPLEMENTATION IS COPYRIGHT 2002 KEN PERLIN
