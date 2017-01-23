@@ -398,13 +398,15 @@ private:
 		float direction_angle = (float)(D3DXToRadian(random_number()));
 		float launch_angle_ = (float)(D3DXToRadian(random_number()));
 
+		float mod = ((float)random_number(95, 105)) / 100.0f;
+
 		// Calculate the vertical component of velocity.
-		p->velocity_.y = launch_velocity_ * (float)sin(launch_angle_);
+		p->velocity_.y = (launch_velocity_ * (float)sin(launch_angle_))*mod;
 
 		// Calculate the horizontal components of velocity.
 		// This is X and Z dimensions.
-		p->velocity_.x = launch_velocity_ * (float)cos(launch_angle_) * (float)cos(direction_angle);
-		p->velocity_.z = launch_velocity_ * (float)cos(launch_angle_) * (float)sin(direction_angle);
+		p->velocity_.x = (launch_velocity_ * (float)cos(launch_angle_) * (float)cos(direction_angle))*mod;
+		p->velocity_.z = (launch_velocity_ * (float)cos(launch_angle_) * (float)sin(direction_angle))*mod;
 
 		//have random lifetime
 		int n = random_number(0, max_lifetime_);
@@ -608,7 +610,7 @@ std::shared_ptr<FIREWORK_ROCKET_CLASS> CreateRocket(D3DXVECTOR3 startLocation)
 	f->launch_velocity_ = 1.0f;
 	f->time_increment_ = 0.05f;
 	f->max_lifetime_ = 20;
-	f->start_particles_ = 2;
+	f->start_particles_ = 20;
 	f->particle_size_ = 0.5f;
 
 	//slightly random vel
@@ -627,7 +629,7 @@ std::shared_ptr<FIREWORK_EXPLOSION_CLASS> CreateExplosion(D3DXVECTOR3 startLocat
 	std::shared_ptr<FIREWORK_EXPLOSION_CLASS> f(new FIREWORK_EXPLOSION_CLASS);
 
 	////add a firework1
-	f->max_particles_ = 300;
+	f->max_particles_ = 600;
 	f->origin_ = startLocation;
 	f->gravity_ = -0.5f;
 	f->launch_velocity_ = 5.0f;
@@ -658,6 +660,7 @@ public:
 	{
 		//create a complete firework for testing
 		std::shared_ptr<FIREWORK_ROCKET_CLASS> first = CreateRocket(startLocation);
+		first->start_particles_ = 5;
 		first->initialise();
 		g_Particles.push_back(first);
 	}
@@ -667,7 +670,7 @@ public:
 		//create a complete firework for testing
 		std::shared_ptr<FIREWORK_ROCKET_CLASS> first = CreateRocket(startLocation);
 		first->max_lifetime_ = 50;
-		first->start_particles_ = 5;
+		//first->start_particles_ = 5;
 		first->particle_size_ = 2.0f;
 		first->initialise();
 		g_Particles.push_back(first);
@@ -686,7 +689,7 @@ public:
 			z = ((z - 180) / 100);
 			first->RocketVel = D3DXVECTOR3(x, 6.0f, z);
 			first->max_lifetime_ = 50;
-			first->start_particles_ = 5;
+			//first->start_particles_ = 5;
 			first->particle_size_ = 2.0f;
 			first->initialise();
 			g_Particles.push_back(first);
@@ -720,6 +723,7 @@ public:
 		for (int i = 0; i < 10; i++)
 		{
 			std::shared_ptr<FIREWORK_ROCKET_CLASS> second = CreateRocket(startLocation);
+			second->start_particles_ = 5;
 			second->RocketVel = D3DXVECTOR3((((float)random_number(0, 400)) / 100) - 2.0f, (((float)random_number(0, 400)) / 100) - 2.0f, (((float)random_number(0, 400)) / 100) - 2.0f);
 			second->rocketTime = 40;
 
